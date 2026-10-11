@@ -90,7 +90,7 @@
     <h2 id="min-sum">The min-sum update</h2>
     <p>The exact rule multiplies probabilities. The <b>min-sum</b> shortcut keeps the sign and the smallest strength; <code>_minsum</code> in <code>engine/decoders.py</code> implements it. Write <span data-tex="s_c"></span> for check <span data-tex="c"></span>’s result, <span data-tex="\mu_{v\to c}"></span> for what qubit <span data-tex="v"></span> tells check <span data-tex="c"></span>, and <span data-tex="m_{c\to v}"></span> for the reply.</p>
     <div class="sp-eq">
-      <div data-tex="m_{c\to v}=(-1)^{s_c}\prod_{v'\neq v}\operatorname{sgn}\mu_{v'\to c}\;\cdot\;\min_{v'\neq v}\lvert\mu_{v'\to c}\rvert,\qquad \mu_{v\to c}=\ell_v+\sum_{c'\neq c}m_{c'\to v}" data-display></div>
+      <div data-tex="\begin{aligned}m_{c\to v}&=(-1)^{s_c}\prod_{v'\neq v}\operatorname{sgn}\mu_{v'\to c}\;\cdot\;\min_{v'\neq v}\lvert\mu_{v'\to c}\rvert\\[4pt]\mu_{v\to c}&=\ell_v+\sum_{c'\neq c}m_{c'\to v}\end{aligned}" data-display></div>
       <span class="sp-eq__n">(8.1)</span>
     </div>
     <p class="sp-eq-words">In words: a check that fired (<span data-tex="s_c=1"></span>) flips the sign of its advice, and it trusts its other qubits only as much as the least sure of them. A qubit tells a check everything it knows except what that check itself said.</p>
