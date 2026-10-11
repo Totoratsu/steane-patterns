@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Steane Patterns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="main.css">
+</head>
+<body>
+<header>
+  <h1>Steane Patterns</h1>
+  <p>Two logical qubits, each a Steane [[7,1,3]] code, under repeated error correction. Each row is one round of the 12 parity checks; the last row is the 14 data qubits read out at the end. Noise lights the checks up, and each lit check plays a note. Two decoders read the pattern: plain BP and Relay-BP.</p>
+</header>
+
+<main>
+  <section class="panel controls" aria-label="Experiment">
+    <label>Logical circuit
+      <select id="preset"></select>
+    </label>
+    <label>Gates (JSON, on logical qubits 0 and 1, applied before encoding)
+      <textarea id="logical" rows="2" spellcheck="false"></textarea>
+    </label>
+    <label>Noise channel
+      <select id="channel">
+        <option value="bit_flip">Bit flip</option>
+        <option value="depolarizing" selected>Depolarizing</option>
+        <option value="si1000">SI1000 (circuit-level)</option>
+      </select>
+    </label>
+    <label>p = <output id="pOut"></output>
+      <input id="p" type="range" min="0" max="0.1" step="0.001" value="0.02">
+    </label>
+    <div class="row2">
+      <label>Rounds <select id="rounds"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+      <label>Shots <select id="shots"><option>16</option><option>32</option><option selected>48</option><option>96</option></select></label>
+      <label>Readout <select id="basis"><option>Z</option><option>X</option></select></label>
+    </div>
+    <button id="run" class="primary">Run</button>
+    <p id="status" class="status" role="status"></p>
+  </section>
+
+  <section class="panel stage" aria-label="Space-time pattern">
+    <div class="toolbar">
+      <div class="seg" role="radiogroup" aria-label="View">
+        <button data-view="raw" aria-pressed="true">Raw bits</button>
+        <button data-view="det" aria-pressed="false">Detections</button>
+        <button data-view="heat" aria-pressed="false">Heat map</button>
+      </div>
+      <label class="inline">Decoder
+        <select id="decoder"><option value="relay">Relay-BP</option><option value="bp">BP</option><option value="none">none</option></select>
+      </label>
+    </div>
+    <canvas id="grid" aria-label="Grid of measured bits: rows are rounds, columns are parity checks"></canvas>
+    <div class="toolbar">
+      <button id="prev" aria-label="Previous shot">◀</button>
+      <button id="play">Pause</button>
+      <button id="next" aria-label="Next shot">▶</button>
+      <span id="shotInfo" class="mono"></span>
+      <label class="inline">Tempo <input id="tempo" type="range" min="80" max="700" value="260"></label>
+      <label class="inline"><input id="sound" type="checkbox" checked> Sound</label>
+    </div>
+    <p class="legend"><span><span class="sw z"></span>Z check (sees X errors)</span> <span><span class="sw x"></span>X check (sees Z errors)</span> <span><span class="sw d"></span>data bit = 1</span> <span><span class="sw m"></span>decoder blames this</span></p>
+  </section>
+
+  <section class="panel stats" aria-label="Results">
+    <h2>Logical error rate</h2>
+    <div id="bars"></div>
+    <h2>Logical outcomes</h2>
+    <table id="hist"></table>
+    <p class="note">Ground truth comes from tracking the Pauli frame of the injected noise, so every shot is judged exactly. The decoders get a phenomenological model; for SI1000 that model is approximate (hook errors are left out), just like a real decoder with an imperfect noise model.</p>
+  </section>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>

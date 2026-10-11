@@ -1,0 +1,60 @@
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1f22; --muted: #63676d; --line: #dcdad3;
+  --off: #e7e5de; --z: #d9822b; --x: #2b8fd9; --d: #3a3d42; --mark: #c2187a; --ok: #2f9e5b; --bad: #d13b3b;
+  --accent: #1d1f22; --accent-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1012; --panel: #17181b; --ink: #e9e7e2; --muted: #9a9ea5; --line: #2a2c30;
+    --off: #222428; --z: #f0a04b; --x: #4fb3ff; --d: #e9e7e2; --mark: #ff4fae; --ok: #4cc27c; --bad: #ff6464;
+    --accent: #e9e7e2; --accent-ink: #0f1012;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1012; --panel: #17181b; --ink: #e9e7e2; --muted: #9a9ea5; --line: #2a2c30;
+  --off: #222428; --z: #f0a04b; --x: #4fb3ff; --d: #e9e7e2; --mark: #ff4fae; --ok: #4cc27c; --bad: #ff6464;
+  --accent: #e9e7e2; --accent-ink: #0f1012;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 Inter, system-ui, sans-serif; }
+header { max-width: 1200px; margin: 0 auto; padding: 24px 16px 8px; }
+h1 { margin: 0 0 4px; font: 600 26px/1.2 'JetBrains Mono', monospace; }
+header p { margin: 0; color: var(--muted); max-width: 80ch; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; grid-template-columns: 260px 1fr 280px; align-items: start; }
+@media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+label.inline { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+select, textarea, input[type=range] { width: 100%; margin-top: 4px; }
+label.inline select, label.inline input[type=range] { width: auto; margin: 0; }
+select, textarea, button { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+textarea { font: 12px 'JetBrains Mono', monospace; resize: vertical; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--x); outline-offset: 2px; }
+.primary { width: 100%; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; padding: 10px; }
+.primary:disabled { opacity: .5; cursor: progress; }
+.row2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.status { font-size: 13px; color: var(--muted); min-height: 1.5em; margin: 10px 0 0; }
+.status.err { color: var(--bad); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.toolbar:last-of-type { margin: 12px 0 0; }
+.seg { display: inline-flex; }
+.seg button { border-radius: 0; margin-left: -1px; }
+.seg button:first-child { border-radius: 6px 0 0 6px; }
+.seg button:last-child { border-radius: 0 6px 6px 0; }
+.seg button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); }
+canvas { width: 100%; display: block; }
+.mono { font: 12px 'JetBrains Mono', monospace; color: var(--muted); }
+.legend { font-size: 12px; color: var(--muted); margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+.sw.z { background: var(--z); } .sw.x { background: var(--x); } .sw.d { background: var(--d); }
+.sw.m { border: 2px solid var(--mark); }
+.bar { margin-bottom: 10px; font-size: 13px; }
+.bar .track { height: 8px; background: var(--off); border-radius: 4px; overflow: hidden; margin-top: 3px; }
+.bar .fill { height: 100%; background: var(--ink); }
+.bar.relay .fill { background: var(--ok); } .bar.bp .fill { background: var(--z); }
+table { width: 100%; border-collapse: collapse; font: 12px 'JetBrains Mono', monospace; margin-bottom: 12px; }
+th, td { text-align: right; padding: 3px 4px; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; }
+.note { font-size: 12px; color: var(--muted); margin: 0; }
