@@ -72,8 +72,22 @@ def check_run():
         pass
 
 
+def check_limit(p_data=0.05, p_meas=0.08):
+    """The DP limit equals brute force over all 2^17 errors of a one-round block."""
+    H, L = decoders.dem(1)
+    n = H.shape[1]
+    E = (np.arange(2 ** n)[:, None] >> np.arange(n)) & 1
+    pr = np.array([p_data] * 14 + [p_meas] * 3)
+    prob = np.prod(np.where(E, pr, 1 - pr), axis=1)
+    syn = (E @ H.T % 2) @ (1 << np.arange(H.shape[0]))
+    table = np.zeros((2, 2 ** H.shape[0]))
+    np.add.at(table, (E @ L % 2, syn), prob)
+    assert np.isclose(table.min(0).sum(), decoders.limit(1, p_data, p_meas))
+
+
 def check_relay_beats_bp(shots=4000, rounds=3, p=0.06):
-    """Pure decoder Monte Carlo on the depolarizing model (no circuit simulation, so it is fast)."""
+    """Pure decoder Monte Carlo on the depolarizing model (no circuit simulation, so it is fast).
+    Relay-BP should sit at the optimal-decoder limit; plain BP well above it."""
     H, L = decoders.dem(rounds)
     chan = CHANNELS["depolarizing"](p)
     llr = decoders.priors(rounds, *chan["prior"])
@@ -85,11 +99,13 @@ def check_relay_beats_bp(shots=4000, rounds=3, p=0.06):
         s = H @ err % 2
         fails["bp"] += int(L @ decoders.bp(H, llr, s)[0] + L @ err) % 2
         fails["relay"] += int(L @ decoders.relay_bp(H, llr, s, rng)[0] + L @ err) % 2
-    print("  decoder-only logical error at p=%.2f:" % p, {k: v / shots for k, v in fails.items()})
-    assert fails["relay"] <= fails["bp"], fails
+    lim = decoders.limit(rounds, *chan["prior"])
+    relay, sigma = fails["relay"] / shots, (lim * (1 - lim) / shots) ** 0.5
+    print("  decoder-only logical error at p=%.2f:" % p, {k: v / shots for k, v in fails.items()}, "limit %.3f" % lim)
+    assert lim - 3 * sigma <= relay <= 1.2 * lim and fails["relay"] < fails["bp"], (fails, lim)
 
 
 if __name__ == "__main__":
-    for f in (check_encoder, check_decoders, check_run, check_relay_beats_bp):
+    for f in (check_encoder, check_limit, check_decoders, check_run, check_relay_beats_bp):
         f()
         print("ok", f.__name__)

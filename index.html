@@ -6,13 +6,39 @@
 <title>Steane Patterns</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="src/main.css">
 </head>
 <body>
 <header>
   <h1>Steane Patterns</h1>
-  <p>Two logical qubits, each a Steane [[7,1,3]] code, under repeated error correction. Each row is one round of the 12 parity checks; the last row is the 14 data qubits read out at the end. Noise lights the checks up, and each lit check plays a note. Two decoders read the pattern: plain BP and Relay-BP.</p>
+  <p>Two logical qubits, each protected by a Steane [[7,1,3]] code, go through repeated rounds of error correction. Noise lights up the parity checks, every lit check plays a note, and two decoders (plain BP and Relay-BP) try to undo the damage.</p>
 </header>
+
+<section class="guide" aria-label="How to read this">
+<details open>
+<summary>How to read this</summary>
+<div class="cols">
+<div>
+<h3>The qubits (15 in total)</h3>
+<p>Each logical qubit is a <b>triangle</b>: its 7 vertices are <b>data qubits</b> (q0–q6 for logical A, q7–q13 for B), which hold the information. The 3 <b>faces</b> are not qubits: each is a <b>parity check</b> on the 4 vertices around it. One extra <b>ancilla qubit (q14)</b> measures those checks: it is entangled with a face, read out, reset, and reused, 12 times per round.</p>
+<h3>One round = one grid row</h3>
+<p>Every face is checked twice per round. The <b>Z check</b> (orange) catches bit flips (X errors), and the <b>X check</b> (blue) catches phase flips (Z errors). A cell is the bit the ancilla read: with no noise every check reads 0 and the grid stays dark. While a round plays, the triangle faces mirror it (orange fill = Z check fired, blue outline = X check fired).</p>
+</div>
+<div>
+<h3>The end of the shot</h3>
+<p>Only now are the data qubits measured (filled vertex = read 1). The faces then show the parities computed from those bits. The logical value is the parity of all 7 bits. A decoder looks at the whole pattern and guesses which qubits went wrong (<b>pink rings</b>: on vertices for data errors, on grid cells for faulty readouts). The <b>✓/✗</b> is exact: the simulator tracks every injected error, so we know the truth.</p>
+<h3>Views</h3>
+<ul><li><b>Raw bits</b>: what the ancilla measured.</li><li><b>Detections</b>: only checks that changed since the previous round, which is where new errors appeared. This is what decoders actually read.</li><li><b>Heat map</b>: how often each check fires over all shots.</li></ul>
+</div>
+<div>
+<h3>Logical error rate</h3>
+<p><b>No decoding</b> reads the raw parity. <b>BP</b> is plain belief propagation, which gets lost on the Steane code's short loops and often does not converge. <b>Relay-BP</b> (IBM, 2025) chains BP runs with randomized memory and keeps the best answer. <b>Limit</b> is the exact error rate of the best decoder that reads one error type at a time (maximum-likelihood, per Pauli type). Joint decoders that also use the other type can beat it under depolarizing noise, where one Y error links both types. (Not shown for SI1000, whose circuit-level noise the decoders only approximate). Relay-BP gets within a few percent of it (it picks the single most likely error, while the optimum adds up all equivalent ones). BP stays far above it.</p>
+<h3>Things to try</h3>
+<ul><li>Bit flip: only Z checks (orange) light up. Depolarizing: both colors.</li><li>Depolarizing at p ≈ 0.03 with 256 shots: BP sits well above the limit, and Relay-BP sits close to it.</li><li>SI1000 is realistic circuit noise from superconducting hardware: gates, readout and idling all fail.</li><li>Music: block A plays low, block B high, Z checks triangle wave, X checks sine. A major chord means corrected, a dissonant one means a logical error.</li></ul>
+</div>
+</div>
+</details>
+</section>
 
 <main>
   <section class="panel controls" aria-label="Experiment">
@@ -22,20 +48,20 @@
     <label>Gates (JSON, on logical qubits 0 and 1, applied before encoding)
       <textarea id="logical" rows="2" spellcheck="false"></textarea>
     </label>
-    <label>Noise channel
+    <label title="Bit flip: X errors on data. Depolarizing: random X, Y or Z on data. SI1000: every gate, readout and reset is noisy.">Noise channel
       <select id="channel">
         <option value="bit_flip">Bit flip</option>
         <option value="depolarizing" selected>Depolarizing</option>
         <option value="si1000">SI1000 (circuit-level)</option>
       </select>
     </label>
-    <label>p = <output id="pOut"></output>
+    <label title="Physical error probability per location">p = <output id="pOut"></output>
       <input id="p" type="range" min="0" max="0.1" step="0.001" value="0.02">
     </label>
     <div class="row2">
-      <label>Rounds <select id="rounds"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
-      <label>Shots <select id="shots"><option>16</option><option>32</option><option selected>48</option><option>96</option></select></label>
-      <label>Readout <select id="basis"><option>Z</option><option>X</option></select></label>
+      <label title="Rounds of parity checks before the data is read out">Rounds <select id="rounds"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+      <label>Shots <select id="shots"><option>16</option><option>32</option><option selected>48</option><option>96</option><option>192</option><option>256</option></select></label>
+      <label title="Measure the data qubits in the Z or X basis">Readout <select id="basis"><option>Z</option><option>X</option></select></label>
     </div>
     <button id="run" class="primary">Run</button>
     <p id="status" class="status" role="status"></p>
@@ -48,11 +74,11 @@
         <button data-view="det" aria-pressed="false">Detections</button>
         <button data-view="heat" aria-pressed="false">Heat map</button>
       </div>
-      <label class="inline">Decoder
+      <label class="inline" title="Whose correction is drawn as pink rings and judged ✓/✗">Decoder
         <select id="decoder"><option value="relay">Relay-BP</option><option value="bp">BP</option><option value="none">none</option></select>
       </label>
     </div>
-    <canvas id="grid" aria-label="Grid of measured bits: rows are rounds, columns are parity checks"></canvas>
+    <canvas id="grid" aria-label="Grid of ancilla readouts (rows are rounds, columns are parity checks) above two Steane-code triangles (vertices are data qubits, faces are parity checks)"></canvas>
     <div class="toolbar">
       <button id="prev" aria-label="Previous shot">◀</button>
       <button id="play">Pause</button>
@@ -61,7 +87,7 @@
       <label class="inline">Tempo <input id="tempo" type="range" min="80" max="700" value="260"></label>
       <label class="inline"><input id="sound" type="checkbox" checked> Sound</label>
     </div>
-    <p class="legend"><span><span class="sw z"></span>Z check (sees X errors)</span> <span><span class="sw x"></span>X check (sees Z errors)</span> <span><span class="sw d"></span>data bit = 1</span> <span><span class="sw m"></span>decoder blames this</span></p>
+    <p class="legend"><span><span class="sw z"></span>Z check (sees X errors)</span> <span><span class="sw x"></span>X check (sees Z errors)</span> <span><span class="sw d"></span>data qubit read 1</span> <span><span class="sw m"></span>decoder blames this</span></p>
   </section>
 
   <section class="panel stats" aria-label="Results">

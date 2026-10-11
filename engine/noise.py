@@ -4,7 +4,8 @@ builder samples it per shot and inserts the Paulis. Adding a channel is one entr
 Locations: "data" (every data qubit, before each round and before readout),
 "cx" (after each CX), "1q" (after each H), "meas" (X flip before a measurement),
 "reset" (X flip after a reset). "prior" is (p_data, p_meas): the phenomenological
-model the decoders assume, per Pauli type."""
+model the decoders assume, per Pauli type. "approx" marks a channel whose prior is only a
+rough fit, so the optimal-decoder limit computed from it would not bound the real circuit."""
 
 import random
 
@@ -15,7 +16,7 @@ CHANNELS = {
     # 12 checks ran in parallel; reusing one ancilla is only a simulator qubit-budget trick.
     # shortcut: prior is a rough phenomenological fit (hooks not modelled), use a circuit-level DEM for exact priors.
     "si1000": lambda p: {"data": ("DEP1", 2 * p + p / 10), "cx": ("DEP2", p), "1q": ("DEP1", p / 10),
-                         "meas": 5 * p, "reset": 2 * p, "prior": (5 * p, 9 * p)},
+                         "meas": 5 * p, "reset": 2 * p, "prior": (5 * p, 9 * p), "approx": True},
 }
 
 _P1 = "xyz"

@@ -95,9 +95,11 @@ def run(backend, logical: str = '[["h",0],["cx",0,1]]', channel: str = "depolari
             h[o] = h.get(o, 0) + 1
         return h
 
+    q = None if chan.get("approx") else decoders.limit(rounds, *chan["prior"])
     return json.dumps({
         "rounds": rounds, "shots": out, "basis": basis, "channel": channel, "p": p,
         "qubits": 15, "ideal": _ideal(logical, basis),
         "hist": {"raw": hist(None), "bp": hist("bp"), "relay": hist("relay")},
-        "logical_error": {"raw": sum(any(s["true_flip"]) for s in out) / shots, "bp": fails("bp"), "relay": fails("relay")},
+        "logical_error": {"raw": sum(any(s["true_flip"]) for s in out) / shots, "bp": fails("bp"), "relay": fails("relay"),
+                          "limit": None if q is None else 1 - (1 - q) ** 2},  # two independent blocks
     })

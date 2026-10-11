@@ -51,10 +51,23 @@ canvas { width: 100%; display: block; }
 .sw.z { background: var(--z); } .sw.x { background: var(--x); } .sw.d { background: var(--d); }
 .sw.m { border: 2px solid var(--mark); }
 .bar { margin-bottom: 10px; font-size: 13px; }
-.bar .track { height: 8px; background: var(--off); border-radius: 4px; overflow: hidden; margin-top: 3px; }
+.bar small { color: var(--muted); }
+.bar .nc { display: block; }
+.bar .track { position: relative; height: 8px; background: var(--off); border-radius: 4px; overflow: hidden; margin-top: 3px; }
 .bar .fill { height: 100%; background: var(--ink); }
-.bar.relay .fill { background: var(--ok); } .bar.bp .fill { background: var(--z); }
+.bar.relay .fill { background: var(--ok); } .bar.bp .fill { background: var(--z); } .bar.limit .fill { background: var(--muted); }
+.bar .lim { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); }
 table { width: 100%; border-collapse: collapse; font: 12px 'JetBrains Mono', monospace; margin-bottom: 12px; }
 th, td { text-align: right; padding: 3px 4px; border-bottom: 1px solid var(--line); }
 th:first-child, td:first-child { text-align: left; }
 .note { font-size: 12px; color: var(--muted); margin: 0; }
+
+.guide { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+.guide details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.guide summary { cursor: pointer; font-weight: 600; }
+.guide .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 24px; font-size: 14px; }
+.guide h3 { font-size: 14px; margin: 12px 0 2px; }
+.guide p, .guide ul { margin: 0 0 6px; color: var(--muted); }
+.guide ul { padding-left: 18px; }
+.guide b { color: var(--ink); font-weight: 600; }
+#bars .note { margin-bottom: 16px; }

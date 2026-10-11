@@ -2,6 +2,8 @@
 on the phenomenological space-time model of one Steane block and one Pauli type.
 relay-bp itself is a Rust package and does not run in the browser."""
 
+import functools
+
 import numpy as np
 
 from . import steane
@@ -29,6 +31,23 @@ def priors(rounds: int, p_data: float, p_meas: float) -> np.ndarray:
     p = np.array([p_data] * 7 * (rounds + 1) + [p_meas] * 3 * rounds)
     p = np.clip(p, 1e-6, 0.49)
     return np.log((1 - p) / p)
+
+
+@functools.lru_cache(maxsize=None)
+def limit(rounds: int, p_data: float, p_meas: float) -> float:
+    """Logical error rate of the optimal (maximum-likelihood) decoder for one block, exact
+    under this model: P(syndrome, logical class) by dynamic programming over the error
+    columns, then the decoder can do no better than picking the likelier class."""
+    H, L = dem(rounds)
+    m = H.shape[0]
+    pr = [p_data] * 7 * (rounds + 1) + [p_meas] * 3 * rounds
+    dist = np.zeros(2 ** (m + 1))
+    dist[0] = 1.0
+    idx = np.arange(dist.size)
+    for j, p in enumerate(pr):
+        mask = sum(int(b) << i for i, b in enumerate(H[:, j])) | int(L[j]) << m
+        dist = (1 - p) * dist + p * dist[idx ^ mask]
+    return float(dist.reshape(2, -1).min(0).sum())
 
 
 def _minsum(H, llr0, s, iters, gamma, M):
