@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belief propagation · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+<style>
+  .bp-live table { width:100%; border-collapse:collapse; font:400 13px/18px var(--font-mono); }
+  .bp-live th, .bp-live td { text-align:right; padding:6px 4px; border-bottom:1px solid var(--hairline); }
+  .bp-live th:first-child, .bp-live td:first-child { text-align:left; color:var(--ink-muted); font-weight:500; }
+  .bp-live td.neg { font-weight:600; }
+  .bp-live .scroll { overflow-x:auto; }
+  .bp-live .bp-bar { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); margin-bottom:var(--space-4); }
+</style>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+<nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html" aria-current="page"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 3 · Decoding · Chapter 8 · 5 min read</p>
+    <h1>Belief propagation and why it gets lost</h1>
+    <p class="lede">Belief propagation lets checks and qubits trade opinions until they agree with the syndrome. You will step through it by hand on the Steane code and see it stop on a wrong answer.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-46">Tanner graph</a></dt>
+        <dt><a href="appendix-glossary.html#t-24">Message</a></dt>
+        <dt><a href="appendix-glossary.html#t-26">Min-sum</a></dt>
+        <dt><a href="appendix-glossary.html#t-36">Posterior</a></dt>
+        <dt><a href="appendix-glossary.html#t-41">Short cycle</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="tanner">Checks and qubits as a graph</h2>
+    <p>Chapter 7 left the decoder with a task: given the detections, find the likeliest error. The matrix <span data-tex="H"></span> says which qubits each check touches, so draw it as a <b>Tanner graph</b>. Take the single block of Chapter 3 first: three check nodes, seven qubit nodes, twelve lines. Each qubit starts with a prior belief <span data-tex="\ell=\ln\frac{1-p}{p}"></span>, a large positive number meaning “probably fine”. The simulator’s self-check uses <span data-tex="p=0.01"></span>, so <span data-tex="\ell=4.60"></span>.</p>
+    <figure class="sp-figure">
+      <div class="sp-figure__stage sp-diagram"><img src="../img/tanner.svg" alt="Tanner graph: three check nodes on top, seven qubit nodes below, an edge where a check touches a qubit"></div>
+      <figcaption><span class="sp-mono">Figure 8.1</span>The Tanner graph of the Steane code: an edge joins a check and each qubit it touches. BP passes messages along these edges.</figcaption>
+    </figure>
+
+    <p><b>Belief propagation</b> (BP) is a conversation along those lines. Each check knows its own result, 0 or 1, and tells every qubit it touches what the other qubits make it believe. Each qubit adds what it hears to its prior and passes back the total, minus what that check said. After each round the decoder flips the qubits whose total is negative, and stops when that guess reproduces the syndrome.</p>
+
+    <h2 id="min-sum">The min-sum update</h2>
+    <p>The exact rule multiplies probabilities. The <b>min-sum</b> shortcut keeps the sign and the smallest strength; <code>_minsum</code> in <code>engine/decoders.py</code> implements it. Write <span data-tex="s_c"></span> for check <span data-tex="c"></span>’s result, <span data-tex="\mu_{v\to c}"></span> for what qubit <span data-tex="v"></span> tells check <span data-tex="c"></span>, and <span data-tex="m_{c\to v}"></span> for the reply.</p>
+    <div class="sp-eq">
+      <div data-tex="m_{c\to v}=(-1)^{s_c}\prod_{v'\neq v}\operatorname{sgn}\mu_{v'\to c}\;\cdot\;\min_{v'\neq v}\lvert\mu_{v'\to c}\rvert,\qquad \mu_{v\to c}=\ell_v+\sum_{c'\neq c}m_{c'\to v}" data-display></div>
+      <span class="sp-eq__n">(8.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: a check that fired (<span data-tex="s_c=1"></span>) flips the sign of its advice, and it trusts its other qubits only as much as the least sure of them. A qubit tells a check everything it knows except what that check itself said.</p>
+    <div class="sp-eq">
+      <div data-tex="M_v=\ell_v+\sum_{c}m_{c\to v},\qquad e_v=\begin{cases}1 & M_v<0\\ 0 & \text{otherwise}\end{cases}" data-display></div>
+      <span class="sp-eq__n">(8.2)</span>
+    </div>
+    <p class="sp-eq-words">In words: the posterior <span data-tex="M_v"></span> is the prior plus all incoming messages; the guess <span data-tex="e"></span> marks the qubits whose total went negative.</p>
+
+    <div id="live"></div>
+
+    <h2 id="cycles">Why short cycles trap it</h2>
+    <p>On a tree, every message carries independent evidence and BP is exact. In the Steane graph the same three checks share qubits in every possible combination, so lines close into cycles of length four: two checks, two qubits. A message comes back after two steps and is counted again as if it were new, so beliefs reinforce themselves.</p>
+    <p>Step through the live figure with qubit 6 flipped. That qubit sits under all three faces, so all three checks fire. In the first iteration qubits 2, 4 and 5, which each touch two of the fired checks, are pushed to flip as well, only half as hard as qubit 6, which touches three (posteriors −4.60 against −9.19). Both are past zero, so all four totals go negative together. The guess is qubits 2, 4, 5 and 6, which does reproduce the syndrome 111, so BP stops and reports success. It is wrong twice over: the guess has weight 4 against the true weight 1, and the difference from the true error, qubits 2, 4 and 5, is not a check, so it flips the logical qubit.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage">
+        <div class="sp-tri sp-tri--200" id="f1a"></div>
+        <div class="sp-tri sp-tri--200" id="f1b"></div>
+      </div>
+      <figcaption><span class="sp-mono">Figure 8.3</span>Left: the real flip, qubit 6 (pink ring marks it). Right: the guess BP returns after one iteration, qubits 2, 4, 5 and 6. Both give syndrome 1 1 1; only one is the real error.</figcaption>
+    </figure>
+
+    <p>This is not a corner case. The self-check feeds all 37 single faults of the three-round model to plain BP, and BP miscorrects 4 of them. The example above uses the bare three-by-seven matrix so that it fits on a screen.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Why it matters here</p>
+      <p>BP checks only that the guess matches the syndrome, not that it is the lightest guess that does. When it stops on a heavy guess it still reports success. The next chapter keeps the same messages and changes how they are remembered.</p>
+    </div>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Choose Depolarizing noise, p = 0.03, and read the right panel after Run. Plain BP fails more often than Relay-BP, and the difference is the cost of the cycles described here.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=depolarizing&amp;p=0.03&amp;rounds=3&amp;shots=256&amp;readout=Z&amp;decoder=bp&amp;view=det&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:1fr 1fr">
+        <div><h3>Why does BP stop on a wrong answer?</h3><p>Its only stopping test is that the guess reproduces the syndrome. A heavier guess can pass that test, and nothing in the test prefers the lighter one.</p></div>
+        <div><h3>What does a cycle do to a message?</h3><p>It returns to the node that sent it and is counted again as new evidence, so beliefs grow without any new information.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>F. R. Kschischang, B. J. Frey, H.-A. Loeliger (2001). Factor graphs and the sum-product algorithm. <i>IEEE Transactions on Information Theory</i> 47, 498–519. <a href="https://doi.org/10.1109/18.910572">doi.org/10.1109/18.910572</a><br><span class="sp-src-use">Supports: factor graphs and the sum-product algorithm.</span></li>
+        <li>D. J. C. MacKay (2003). <i>Information Theory, Inference, and Learning Algorithms</i>. Cambridge University Press; free to read online. <a href="https://www.inference.org.uk/itila/">www.inference.org.uk/itila/</a><br><span class="sp-src-use">Supports: belief propagation and log-likelihood ratios in decoding.</span></li>
+        <li>J. Chen, M. P. C. Fossorier (2002). Near optimum universal belief propagation based decoding of low-density parity check codes. <i>IEEE Transactions on Communications</i> 50, 406–414. <a href="https://doi.org/10.1109/26.990903">doi.org/10.1109/26.990903</a><br><span class="sp-src-use">Supports: the min-sum approximation.</span></li>
+        <li>D. Poulin, Y. Chung (2008). On the iterative decoding of sparse quantum codes. <i>Quantum Information and Computation</i> 8, 987. <a href="https://arxiv.org/abs/0801.1241">arxiv.org/abs/0801.1241</a><br><span class="sp-src-use">Supports: why short cycles hurt belief propagation on quantum codes.</span></li>
+        <li>P. Panteleev, G. Kalachev (2021). Degenerate quantum LDPC codes with good finite length performance. <i>Quantum</i> 5, 585. <a href="https://doi.org/10.22331/q-2021-11-22-585">doi.org/10.22331/q-2021-11-22-585</a><br><span class="sp-src-use">Supports: belief propagation with post-processing on degenerate quantum codes.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="07-decoder-task.html"><span class="sp-eyebrow">Previous</span><b>What a decoder must do</b></a>
+      <a href="09-relay-bp.html" class="next"><span class="sp-eyebrow">Next</span><b>Relay-BP</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul>
+        <li><a href="#tanner">Checks and qubits as a graph</a></li>
+        <li><a href="#min-sum">The min-sum update</a></li>
+        <li><a href="#live">Step through it</a></li>
+        <li><a href="#cycles">Why short cycles trap it</a></li>
+        <li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/decoders.py" data-src="engine/decoders.py">engine/decoders.py</a></li><li><a class="mono" href="../../engine/selfcheck.py" data-src="engine/selfcheck.py">engine/selfcheck.py</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="03-syndromes.html">Ch. 3 · Syndromes</a></li><li><a href="07-decoder-task.html">Ch. 7 · What a decoder must do</a></li><li><a href="09-relay-bp.html">Ch. 9 · Relay-BP</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  /* Port of _minsum in engine/decoders.py (gamma = 0, so lam = llr0), one iteration per call, on the 3x7 Steane H. */
+  var H = [[0,0,0,1,1,1,1],[0,1,1,0,0,1,1],[1,0,1,0,1,0,1]];
+  var LLR = Math.log(0.99 / 0.01);
+  function step(llr0, s, m) {
+    var tot = [], j, i;
+    for (j = 0; j < 7; j++) { tot[j] = 0; for (i = 0; i < 3; i++) tot[j] += m[i][j]; }
+    var out = [], post = [];
+    for (i = 0; i < 3; i++) {
+      var prod = 1 - 2 * s[i], edges = [];
+      for (j = 0; j < 7; j++) if (H[i][j]) {
+        var v = llr0[j] + tot[j] - m[i][j];
+        edges.push([j, Math.abs(v), v < 0 ? -1 : 1]); prod *= v < 0 ? -1 : 1;
+      }
+      var min1 = Infinity, min2 = Infinity, idx = -1;
+      edges.forEach(function (e) { if (e[1] < min1) { min2 = min1; min1 = e[1]; idx = e[0]; } else if (e[1] < min2) min2 = e[1]; });
+      min2 = Math.min(min2, 1e3);
+      out[i] = [0,0,0,0,0,0,0];
+      edges.forEach(function (e) { out[i][e[0]] = prod * e[2] * (e[0] === idx ? min2 : min1); });
+    }
+    for (j = 0; j < 7; j++) { post[j] = llr0[j]; for (i = 0; i < 3; i++) post[j] += out[i][j]; }
+    var e = post.map(function (x) { return x < 0 ? 1 : 0; });
+    var ok = H.every(function (r, i) { return r.reduce(function (a, h, k) { return a ^ (h & e[k]); }, 0) === s[i]; });
+    return { m: out, post: post, e: e, ok: ok };
+  }
+  function fmt(x) { var r = Math.abs(x) < 0.005 ? 0 : x; return (r > 0 ? '+' : '') + r.toFixed(2); }
+
+  function mountBP(el) {
+    var q = 6, k = 0, st = null, MAX = 8;
+    var llr = [0,0,0,0,0,0,0].map(function () { return LLR; });
+    function syn() { return H.map(function (r) { return r[q]; }); }
+    function reset() { k = 0; st = { m: [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]], post: llr.slice(), e: [0,0,0,0,0,0,0], ok: false }; }
+    function done() { return st.ok || k >= MAX; }
+    function hint() {
+      var s = syn().join(' ');
+      if (k === 0) return 'Qubit ' + q + ' is flipped, so the checks read ' + s + '. No messages yet: every qubit holds only its prior, ' + LLR.toFixed(2) + '. Press Step.';
+      var w = st.e.reduce(function (a, b) { return a + b; }, 0);
+      var guess = st.e.map(function (b, i) { return b ? i : -1; }).filter(function (i) { return i >= 0; }).join(', ') || 'none';
+      if (!st.ok) return 'Iteration ' + k + ': the guess (' + guess + ') does not yet reproduce the syndrome. Press Step.';
+      var right = w === 1 && st.e[q] === 1;
+      return right ? 'Iteration ' + k + ': the guess is qubit ' + q + ' alone and it reproduces the syndrome. BP stops and is right.'
+        : 'Iteration ' + k + ': the guess (qubits ' + guess + ', weight ' + w + ') reproduces the syndrome, so BP stops, but it is not the real error. A logical error follows.';
+    }
+    function render(focusId) {
+      var hd = '<tr><th scope="col">Message</th>';
+      for (var j = 0; j < 7; j++) hd += '<th scope="col">q' + j + '</th>';
+      var rows = '';
+      for (var i = 0; i < 3; i++) {
+        rows += '<tr><th scope="row">c' + (i + 1) + ' → q (s=' + syn()[i] + ')</th>';
+        for (j = 0; j < 7; j++) rows += '<td>' + (H[i][j] ? fmt(st.m[i][j]) : '·') + '</td>';
+        rows += '</tr>';
+      }
+      rows += '<tr><th scope="row">Posterior M</th>';
+      for (j = 0; j < 7; j++) rows += '<td' + (st.post[j] < 0 ? ' class="neg"' : '') + '>' + fmt(st.post[j]) + '</td>';
+      rows += '</tr><tr><th scope="row">Guess e</th>';
+      for (j = 0; j < 7; j++) rows += '<td' + (st.e[j] ? ' class="neg"' : '') + '>' + st.e[j] + '</td>';
+      rows += '</tr>';
+      var opts = '';
+      for (j = 0; j < 7; j++) opts += '<option value="' + j + '"' + (j === q ? ' selected' : '') + '>qubit ' + j + '</option>';
+      el.innerHTML =
+        '<div class="sp-live bp-live">' +
+        '<div class="sp-live__bar"><p class="sp-eyebrow">Live figure</p>' +
+          '<label class="sp-field" style="grid-auto-flow:column;align-items:center;gap:8px"><span>Flipped</span><span class="sp-select sp-select--inline"><select data-q aria-label="Which qubit is flipped">' + opts + '</select></span></label>' +
+          '<button class="sp-btn sp-btn--primary" data-step' + (done() ? ' disabled' : '') + '>Step</button>' +
+          '<button class="sp-btn" data-reset>Reset</button></div>' +
+        '<p class="sp-readout" style="margin-bottom:var(--space-3)">Iteration ' + k + ' · syndrome ' + syn().join(' ') + ' · guess ' + (k === 0 ? 'none yet' : st.ok ? 'matches the syndrome' : 'does not match') + '</p>' +
+        '<div class="scroll"><table><caption class="sp-caption" style="text-align:left;caption-side:bottom;padding-top:8px">Rows c1 to c3: message from each check to the qubits it touches (a dot where there is no line). Bold: negative posterior, guess 1.</caption><thead>' + hd + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        '<p class="sp-caption sp-live__hint" role="status" aria-live="polite">' + hint().replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</p>' +
+        '<p class="sp-caption"><span class="sp-mono">Figure 8.2</span> Min-sum on the Steane check matrix with prior 4.60 per qubit (p = 0.01), exactly as <code>_minsum</code> computes it with gamma = 0. Qubit 6 ends on a weight-4 guess.</p>' +
+        '</div>';
+      if (focusId) { var f = el.querySelector(focusId); if (f && !f.disabled) f.focus(); }
+    }
+    el.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-step]') && !done()) { st = step(llr, syn(), st.m); k++; render(done() ? '[data-reset]' : '[data-step]'); }
+      else if (ev.target.closest('[data-reset]')) { reset(); render('[data-reset]'); }
+    });
+    el.addEventListener('change', function (ev) {
+      if (ev.target.matches('[data-q]')) { q = +ev.target.value; reset(); render('[data-q]'); }
+    });
+    reset(); render();
+  }
+
+  window.addEventListener('DOMContentLoaded', function () {
+    var G = window.SteanePatterns;
+    document.getElementById('f1a').innerHTML = G.SteaneTriangle({ name: 'A', faces: [{z:1},{z:1},{z:1}], data: [0,0,0,0,0,0,1], blame: [6], caption: 'real flip · qubit 6' });
+    document.getElementById('f1b').innerHTML = G.SteaneTriangle({ name: 'A', faces: [{z:1},{z:1},{z:1}], data: [0,0,1,0,1,1,1], verdict: 'bad', caption: 'BP guess · 2, 4, 5, 6' });
+    mountBP(document.getElementById('live'));
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

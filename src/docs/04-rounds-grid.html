@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rounds and the grid · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html" aria-current="page"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 2 · Time and noise · Chapter 4 · 6 min read</p>
+    <h1>Checking again and again: rounds and the grid</h1>
+    <p class="lede">Errors keep arriving, so the checks run again and again. You will be able to read the grid, one row per round and one column per check, and explain why 15 qubits are enough.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-40">Round</a></dt>
+        <dt><a href="appendix-glossary.html#t-1">Ancilla</a></dt>
+        <dt><a href="appendix-glossary.html#t-42">Shot</a></dt>
+        <dt><a href="appendix-glossary.html#t-14">Grid</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="one-round">One round is twelve checks</h2>
+    <p>The simulator protects two logical qubits, each in its own Steane block of seven data qubits: block A on qubits 0 to 6, block B on qubits 7 to 13. Chapter 3 gave each block three Z checks and three X checks, one per face of the triangle. That is six checks per block and twelve in all. Running each of them once is a <b>round</b>.</p>
+    <figure class="sp-figure">
+      <div class="sp-figure__stage sp-diagram"><img src="../img/shot-flow.svg" alt="One shot as a sequence: logical gates, encoding, R rounds of noise and 12 checks, final readout, then decoding"></div>
+      <figcaption><span class="sp-mono">Figure 4.1</span>A shot, left to right. The rounds box repeats; the same ancilla is reused for all 12 checks in each round.</figcaption>
+    </figure>
+
+    <p>A shot is built in a fixed order. The logical gates you chose act first, then each logical qubit is encoded into its block. After encoding, noise starts. Each round first lets noise hit the 14 data qubits, then measures the twelve checks one after another: block A Z1 to Z3, then X1 to X3, then block B in the same order. After the last round the 14 data qubits themselves are measured. You pick 1 to 5 rounds; the default is 3.</p>
+    <p>One round is not enough because errors do not stop. A flip that arrives after the first round is invisible to it. Repeating the checks adds time as a second dimension: if an answer changes between rounds, something happened in between.</p>
+
+    <h2 id="one-ancilla">One ancilla, measured and reset after every check</h2>
+    <p>Reading a check by measuring the data qubits would destroy the encoded state. The circuit instead uses an <b>ancilla</b>. For a Z check it copies the parity of the four data qubits in the face onto the ancilla with four controlled-NOT gates. For an X check it applies Hadamard gates to the ancilla and reverses the direction of the four gates. Then it measures the ancilla alone. The data qubits are touched but never read.</p>
+    <figure class="sp-figure">
+      <div class="sp-figure__stage sp-diagram"><img src="../img/check-z.svg" alt="A Z check: four CNOTs from data qubits 3, 4, 5 and 6 onto the ancilla, then measure and reset"></div>
+      <figcaption><span class="sp-mono">Figure 4.2</span>A Z check (face 1): four CNOTs from the face onto the ancilla, then measure and reset. Code: <code>_Builder.check</code>.</figcaption>
+    </figure>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage sp-diagram"><img src="../img/check-x.svg" alt="An X check: Hadamard on the ancilla, four CNOTs from the ancilla to the data qubits, Hadamard again, then measure and reset"></div>
+      <figcaption><span class="sp-mono">Figure 4.3</span>An X check (face 1): the same four qubits, but the ancilla is the control, with Hadamards before and after.</figcaption>
+    </figure>
+
+    <p>Twelve checks with a fresh ancilla each would need 14 + 12 = 26 qubits, more than the 24-qubit simulator can hold. So one ancilla is measured and then reset to 0 after every check, and the next check reuses it.</p>
+
+    <div class="sp-eq">
+      <div data-tex="n_{\text{qubits}} = 14 + 1 = 15 \quad\text{instead of}\quad 14 + 12 = 26" data-display></div>
+      <span class="sp-eq__n">(4.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: fourteen data qubits plus one shared ancilla, however many rounds you run. The price is that the hardware must measure in the middle of a circuit and reset the qubit, which this project has verified only on the built-in Qiskit simulator, so it refuses IonQ backends for now (chapter 12).</p>
+
+    <h2 id="the-grid">The grid: space on one axis, time on the other</h2>
+    <p>Every check answer is one bit, 1 if the check fired. The <b>grid</b> lays those bits out: columns are checks, rows are rounds, and a lit cell is a check that read 1. Orange cells are Z checks, blue cells are X checks. Under the grid, the triangle of each block mirrors the latest row: a face is filled when its Z check fired and outlined in blue when its X check fired. The vertices stay empty until the end, when the data qubits are read and a filled vertex means the qubit read 1.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage" style="flex-direction:column;align-items:center">
+        <div id="f1grid"></div>
+        <div class="sp-tri sp-tri--200" id="f1tri"></div>
+      </div>
+      <div style="margin-top:var(--space-2)"><ul class="sp-legend" aria-label="Legend"><li><span class="sp-sw is-z"></span>Z check fired</li><li><span class="sp-sw is-x"></span>X check fired</li></ul></div>
+      <figcaption><span class="sp-mono">Figure 4.4</span>A bit flip on qubit 4 before round 2 lights Z1 and Z3 in round 2, and they stay lit in round 3. The triangle shows the latest row, round 3.</figcaption>
+    </figure>
+    <figure class="sp-figure">
+      <div class="sp-figure__stage" style="display:block">
+        <table class="sp-table" aria-label="Block A checks in rounds 1 to 3 for a bit flip on qubit 4 before round 2">
+          <thead><tr><th scope="col">Round</th><th scope="col">Z1</th><th scope="col">Z2</th><th scope="col">Z3</th><th scope="col">X1</th><th scope="col">X2</th><th scope="col">X3</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>2</td><td class="is-hit">1</td><td>0</td><td class="is-hit">1</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>3</td><td class="is-hit">1</td><td>0</td><td class="is-hit">1</td><td>0</td><td>0</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><span class="sp-mono">Table 4.1</span>Worked example, block A: a bit flip on qubit 4 before round 2. Qubit 4 sits in faces 1 and 3, so Z1 and Z3 light up and stay lit. The X checks see only Z errors and stay dark.</figcaption>
+    </figure>
+
+
+    <p>Rounds are also where noise gets its chance. In the simulator the noise models of chapter 6 hit the data qubits once before every round and once more before the final readout, so more rounds mean more chances for an error, and more rows in which to see it. Measuring itself can fail too: a check can be read wrongly even when the data are fine, which chapter 5 turns into a pattern you can recognise.</p>
+
+    <p>The figure shows block A only. In the simulator the grid has twelve columns, block A then block B, and each shot is played row by row so you can watch time pass.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Why it matters here</p>
+      <p>A flip that stays lit in every later row does not say when it happened. The next chapter shows how to turn the grid into something that does.</p>
+    </div>
+
+        <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>First set p to 0 and press Run: the grid stays dark, because without noise every check reads 0. Then set p to 0.03 and run again. Look for orange cells that stay lit in every row below their first appearance: those are flips that arrived earlier and have not gone away.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=depolarizing&amp;p=0&amp;rounds=3&amp;shots=16&amp;readout=Z&amp;decoder=relay&amp;view=raw&amp;run=1">Open with p = 0 <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=depolarizing&amp;p=0.03&amp;rounds=3&amp;shots=48&amp;readout=Z&amp;decoder=relay&amp;view=raw&amp;run=1">Open with p = 0.03 <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:1fr 1fr">
+        <div><h3>Why are 15 qubits enough for 12 checks?</h3><p>One ancilla is measured and reset after every check and reused for the next, so the circuit needs 14 data qubits plus 1.</p></div>
+        <div><h3>How many cells does a 4-round shot have?</h3><p>Four rounds of 12 checks: 48 cells, 24 per block.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>A. G. Fowler, M. Mariantoni, J. M. Martinis, A. N. Cleland (2012). Surface codes: Towards practical large-scale quantum computation. <i>Physical Review A</i> 86, 032324. <a href="https://doi.org/10.1103/PhysRevA.86.032324">doi.org/10.1103/PhysRevA.86.032324</a><br><span class="sp-src-use">Supports: repeating rounds of syndrome measurement in time.</span></li>
+        <li>E. Dennis, A. Kitaev, A. Landahl, J. Preskill (2002). Topological quantum memory. <i>Journal of Mathematical Physics</i> 43, 4452. <a href="https://doi.org/10.1063/1.1499754">doi.org/10.1063/1.1499754</a><br><span class="sp-src-use">Supports: treating repeated rounds as a space-time problem.</span></li>
+        <li>Qiskit documentation. <code>BasicSimulator</code>, which limits statevector simulation to 24 qubits. <a href="https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.providers.basic_provider.BasicSimulator">quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.providers.basic_provider.BasicSimulator</a><br><span class="sp-src-use">Supports: the 24-qubit statevector limit used in the qubit count.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="03-syndromes.html"><span class="sp-eyebrow">Previous</span><b>Syndromes</b></a>
+      <a href="05-detection-events.html" class="next"><span class="sp-eyebrow">Next</span><b>Detection events</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul><li><a href="#one-round">One round is twelve checks</a></li><li><a href="#one-ancilla">One ancilla</a></li><li><a href="#the-grid">The grid</a></li><li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/circuit.py" data-src="engine/circuit.py">engine/circuit.py</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="03-syndromes.html">Ch. 3 · Syndromes</a></li><li><a href="05-detection-events.html">Ch. 5 · Detection events</a></li><li><a href="12-limits.html">Ch. 12 · Limits and what next</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    var G = window.SteanePatterns;
+    document.getElementById('f1grid').innerHTML = G.CheckGrid({ label: 'Block A checks over three rounds: round 1 quiet, rounds 2 and 3 have Z1 and Z3 fired', view: 'raw',
+      rows: [[0,0,0,0,0,0],[1,0,1,0,0,0],[1,0,1,0,0,0]] });
+    document.getElementById('f1tri').innerHTML = G.SteaneTriangle({ name: 'A', faces: [{z:1},{z:0},{z:1}], caption: 'round 3 · Z1 and Z3 fired' });
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

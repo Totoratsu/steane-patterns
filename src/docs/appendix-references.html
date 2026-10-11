@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>References · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html" aria-current="page"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Appendix</p>
+    <h1>References</h1>
+    <p class="lede">The papers, books and documentation behind the code, the decoder, the noise model and the sound.</p>
+
+    <h2 id="papers">Sources</h2>
+    <p>Every source below was checked against its publisher, arXiv or documentation page for title, authors, venue and, where the page cites it for a specific claim, that claim. Each chapter ends with its own Sources list that says what each source supports. Two entries are Wikipedia, used only as a general reference for music theory.</p>
+    <h3>Quantum error correction</h3>
+    <ol>
+      <li>M. A. Nielsen, I. L. Chuang (2010). <i>Quantum Computation and Quantum Information</i>, 10th anniversary edition. Cambridge University Press. ISBN 978-1-107-00217-3. <a href="https://www.cambridge.org/9781107002173">www.cambridge.org/9781107002173</a></li>
+      <li>B. M. Terhal (2015). Quantum error correction for quantum memories. <i>Reviews of Modern Physics</i> 87, 307. <a href="https://doi.org/10.1103/RevModPhys.87.307">doi.org/10.1103/RevModPhys.87.307</a></li>
+      <li>W. K. Wootters, W. H. Zurek (1982). A single quantum cannot be cloned. <i>Nature</i> 299, 802–803. <a href="https://doi.org/10.1038/299802a0">doi.org/10.1038/299802a0</a></li>
+      <li>A. M. Steane (1996). Error correcting codes in quantum theory. <i>Physical Review Letters</i> 77, 793. <a href="https://doi.org/10.1103/PhysRevLett.77.793">doi.org/10.1103/PhysRevLett.77.793</a></li>
+      <li>A. M. Steane (1996). Simple quantum error-correcting codes. <i>Physical Review A</i> 54, 4741. <a href="https://arxiv.org/abs/quant-ph/9605021">arxiv.org/abs/quant-ph/9605021</a></li>
+      <li>A. R. Calderbank, P. W. Shor (1996). Good quantum error-correcting codes exist. <i>Physical Review A</i> 54, 1098. <a href="https://doi.org/10.1103/PhysRevA.54.1098">doi.org/10.1103/PhysRevA.54.1098</a></li>
+      <li>D. Gottesman (1997). Stabilizer codes and quantum error correction. Ph.D. thesis, Caltech. arXiv:quant-ph/9705052. <a href="https://arxiv.org/abs/quant-ph/9705052">arxiv.org/abs/quant-ph/9705052</a></li>
+    </ol>
+    <h3>Rounds, detections and noise</h3>
+    <ol>
+      <li>A. G. Fowler, M. Mariantoni, J. M. Martinis, A. N. Cleland (2012). Surface codes: Towards practical large-scale quantum computation. <i>Physical Review A</i> 86, 032324. <a href="https://doi.org/10.1103/PhysRevA.86.032324">doi.org/10.1103/PhysRevA.86.032324</a></li>
+      <li>E. Dennis, A. Kitaev, A. Landahl, J. Preskill (2002). Topological quantum memory. <i>Journal of Mathematical Physics</i> 43, 4452. <a href="https://doi.org/10.1063/1.1499754">doi.org/10.1063/1.1499754</a></li>
+      <li>C. Gidney (2021). Stim: a fast stabilizer circuit simulator. <i>Quantum</i> 5, 497. <a href="https://doi.org/10.22331/q-2021-07-06-497">doi.org/10.22331/q-2021-07-06-497</a></li>
+      <li>Stim documentation. Detector error model file format. <a href="https://github.com/quantumlib/Stim/blob/main/doc/file_format_dem_detector_error_model.md">github.com/quantumlib/Stim/blob/main/doc/file_format_dem_detector_error_model.md</a></li>
+      <li>S. Aaronson, D. Gottesman (2004). Improved simulation of stabilizer circuits. <i>Physical Review A</i> 70, 052328. <a href="https://doi.org/10.1103/PhysRevA.70.052328">doi.org/10.1103/PhysRevA.70.052328</a></li>
+      <li>C. Gidney, M. Newman, A. Fowler, M. Broughton (2021). A fault-tolerant honeycomb memory. <i>Quantum</i> 5, 605. <a href="https://arxiv.org/abs/2108.10457">arxiv.org/abs/2108.10457</a></li>
+    </ol>
+    <h3>Decoding</h3>
+    <ol>
+      <li>F. R. Kschischang, B. J. Frey, H.-A. Loeliger (2001). Factor graphs and the sum-product algorithm. <i>IEEE Transactions on Information Theory</i> 47, 498–519. <a href="https://doi.org/10.1109/18.910572">doi.org/10.1109/18.910572</a></li>
+      <li>D. J. C. MacKay (2003). <i>Information Theory, Inference, and Learning Algorithms</i>. Cambridge University Press; free to read online. <a href="https://www.inference.org.uk/itila/">www.inference.org.uk/itila/</a></li>
+      <li>J. Chen, M. P. C. Fossorier (2002). Near optimum universal belief propagation based decoding of low-density parity check codes. <i>IEEE Transactions on Communications</i> 50, 406–414. <a href="https://doi.org/10.1109/26.990903">doi.org/10.1109/26.990903</a></li>
+      <li>D. Poulin, Y. Chung (2008). On the iterative decoding of sparse quantum codes. <i>Quantum Information and Computation</i> 8, 987. <a href="https://arxiv.org/abs/0801.1241">arxiv.org/abs/0801.1241</a></li>
+      <li>P. Panteleev, G. Kalachev (2021). Degenerate quantum LDPC codes with good finite length performance. <i>Quantum</i> 5, 585. <a href="https://doi.org/10.22331/q-2021-11-22-585">doi.org/10.22331/q-2021-11-22-585</a></li>
+      <li>T. Müller, T. Alexander, M. E. Beverland, M. Bühler, B. R. Johnson, T. Maurer, D. Vandeth (2025). Improved belief propagation is sufficient for real-time decoding of quantum memory. arXiv:2506.01779. <a href="https://arxiv.org/abs/2506.01779">arxiv.org/abs/2506.01779</a></li>
+      <li><code>relay-bp</code> on PyPI. Python bindings for the Rust implementation of Relay-BP (Apache 2.0). <a href="https://pypi.org/project/relay-bp/">pypi.org/project/relay-bp/</a></li>
+    </ol>
+    <h3>Statistics, sound and tools</h3>
+    <ol>
+      <li>L. D. Brown, T. T. Cai, A. DasGupta (2001). Interval estimation for a binomial proportion. <i>Statistical Science</i> 16, 101–133. <a href="https://doi.org/10.1214/ss/1009213286">doi.org/10.1214/ss/1009213286</a></li>
+      <li>W3C Audio Working Group (2021). Web Audio API, W3C Recommendation, 17 June 2021. <a href="https://www.w3.org/TR/2021/REC-webaudio-20210617/">www.w3.org/TR/2021/REC-webaudio-20210617/</a></li>
+      <li>Wikipedia. Pentatonic scale (a general reference, not a primary source). <a href="https://en.wikipedia.org/wiki/Pentatonic_scale">en.wikipedia.org/wiki/Pentatonic_scale</a></li>
+      <li>Wikipedia. Equal temperament (a general reference, not a primary source). <a href="https://en.wikipedia.org/wiki/Equal_temperament">en.wikipedia.org/wiki/Equal_temperament</a></li>
+      <li>A. Javadi-Abhari et al. (2024). Quantum computing with Qiskit. arXiv:2405.08810. <a href="https://arxiv.org/abs/2405.08810">arxiv.org/abs/2405.08810</a></li>
+      <li>Qiskit documentation. <code>BasicSimulator</code>, which limits statevector simulation to 24 qubits. <a href="https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.providers.basic_provider.BasicSimulator">quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.providers.basic_provider.BasicSimulator</a></li>
+      <li>IonQ documentation. OpenQASM 3 on IonQ: mid-circuit measurement is supported on some targets and not others. <a href="https://docs.ionq.com/api-reference/v0.4/openqasm3">docs.ionq.com/api-reference/v0.4/openqasm3</a></li>
+    </ol>
+    <h2 id="fonts">Fonts</h2>
+    <p>Geist, Geist Mono (© 2024 The Geist Project Authors) and Instrument Serif (© 2022 The Instrument Serif Project Authors) are used under the <a href="https://openfontlicense.org">SIL Open Font License 1.1</a>. The notice ships in <code>src/fonts/NOTICE.md</code>. Math is rendered with <a href="https://katex.org">KaTeX</a> (MIT licence), loaded from a CDN.</p>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="appendix-run.html"><span class="sp-eyebrow">Previous</span><b>Run it yourself</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul><li><a href="#papers">Sources</a></li><li><a href="#fonts">Fonts</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../README.md" data-src="README.md">README.md</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="09-relay-bp.html">Ch. 9 · Relay-BP</a></li><li><a href="06-noise-models.html">Ch. 6 · Noise models</a></li><li><a href="appendix-run.html">Appendix B · Run it yourself</a></li></ul>
+    </div>
+  </aside>
+</div>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

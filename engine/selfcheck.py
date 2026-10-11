@@ -1,7 +1,6 @@
 """python -m engine.selfcheck. Asserts the encoder, the decoders and the end-to-end run."""
 
 import json
-import random
 
 import numpy as np
 from qiskit import QuantumCircuit
@@ -9,7 +8,6 @@ from qiskit.providers.basic_provider import BasicSimulator
 from qiskit.quantum_info import Pauli, Statevector
 
 from . import bridge, decoders, steane
-from .circuit import build
 from .noise import CHANNELS
 
 

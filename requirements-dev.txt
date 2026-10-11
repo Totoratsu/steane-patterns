@@ -1,0 +1,2 @@
+-r requirements.txt
+matplotlib  # only for scripts/make_diagrams.py

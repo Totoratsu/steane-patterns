@@ -1,0 +1,84 @@
+/* Steane Patterns tokens, generated from the design system (tokens.json). Themes: paper (default) and night. */
+@font-face { font-family: "Instrument Serif"; src: url("../fonts/InstrumentSerif-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Instrument Serif"; src: url("../fonts/InstrumentSerif-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Geist"; src: url("../fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("../fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+:root, [data-theme="paper"] {
+  --paper: #f3efe6;
+  --surface: #faf8f3;
+  --cell-off: #e4dfd2;
+  --hairline: #d6d0c2;
+  --control-border: #857e6f;
+  --ink: #1c1b18;
+  --ink-muted: #58534a;
+  --accent: var(--ink);
+  --on-accent: var(--paper);
+  --focus: var(--ink);
+  --check-z: #c2601a;
+  --check-x: #2b73b9;
+  --blame: #c4177c;
+  --ok: #17703f;
+  --bad: #b92b27;
+  color-scheme: light;
+}
+[data-theme="night"] {
+  --paper: #121110;
+  --surface: #1a1916;
+  --cell-off: #26241f;
+  --hairline: #2f2d27;
+  --control-border: #7b7569;
+  --ink: #ece8de;
+  --ink-muted: #a8a396;
+  --accent: var(--ink);
+  --on-accent: var(--paper);
+  --focus: var(--ink);
+  --check-z: #f0a04b;
+  --check-x: #5ab0f2;
+  --blame: #ff5fb0;
+  --ok: #5ccb88;
+  --bad: #ff7b72;
+  color-scheme: dark;
+}
+/* Follow the system when the person has not chosen a theme. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --paper: #121110;
+    --surface: #1a1916;
+    --cell-off: #26241f;
+    --hairline: #2f2d27;
+    --control-border: #7b7569;
+    --ink: #ece8de;
+    --ink-muted: #a8a396;
+    --accent: var(--ink);
+    --on-accent: var(--paper);
+    --focus: var(--ink);
+    --check-z: #f0a04b;
+    --check-x: #5ab0f2;
+    --blame: #ff5fb0;
+    --ok: #5ccb88;
+    --bad: #ff7b72;
+    color-scheme: dark;
+  }
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 40px;
+  --space-7: 72px;
+  --cell-size: 36px;
+  --col-controls: 248px;
+  --col-results: 280px;
+  --col-docs-nav: 232px;
+  --col-docs-aside: 200px;
+  --measure-docs: 680px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}

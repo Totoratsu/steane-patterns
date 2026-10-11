@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation · Steane Patterns</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<style>
+  .landing { max-width: 1200px; margin: 0 auto; padding: var(--space-7) var(--space-5) var(--space-7); display: grid; gap: var(--space-6); }
+  .landing h1 { font: 400 56px/56px var(--font-display); letter-spacing: -.01em; margin: var(--space-3) 0 var(--space-4); }
+  .landing .lede { font: 400 18px/29px var(--font-sans); color: var(--ink-muted); max-width: 60ch; margin: 0; }
+  .landing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-6); }
+  .landing-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+  .landing-list li > a, .landing-list .soon { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: var(--space-3); align-items: baseline; padding: var(--space-3) var(--space-4); background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-lg); color: var(--ink); text-decoration: none; }
+  .landing-list li > a:hover { border-color: var(--control-border); }
+  .landing-list li > a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .landing-list .n { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
+  .landing-list b { font-weight: 600; }
+  .landing-list .d { font: 400 14px/22px var(--font-sans); color: var(--ink-muted); }
+  .landing-part > .sp-eyebrow { margin-bottom: var(--space-3); }
+  @media (max-width: 860px) { .landing-grid { grid-template-columns: 1fr; } .landing h1 { font-size: 44px; line-height: 44px; } }
+</style>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+<main class="landing" id="main" tabindex="-1">
+  <img class="sp-banner" src="../img/steane-banner.png" alt="Steane Patterns: watch error correction, hear it too" width="2880" height="960">
+  <div>
+    <p class="sp-eyebrow">Twelve short chapters</p>
+    <h1>How these simulations work</h1>
+    <p class="lede">From a single bit flip to Relay-BP: what the grid, the triangles, the rings and the sounds mean, one idea at a time. Each chapter takes five to eight minutes and ends with something to try in the simulator.</p>
+  </div>
+  <div class="landing-grid">
+    <section class="landing-part"><p class="sp-eyebrow">Part 1 · The code</p><ol class="landing-list">
+      <li id="c01"><a href="01-why-protect.html"><span class="n">01</span><span><b>Why qubits need protecting</b><br><span class="d">A qubit cannot be copied or simply looked at; what bit flips, phase flips and Y errors are.</span></span></a></li>
+      <li id="c02"><a href="02-steane-code.html"><span class="n">02</span><span><b>The Steane code</b><br><span class="d">Seven data qubits, one logical qubit, three checks, distance 3.</span></span></a></li>
+      <li id="c03"><a href="03-syndromes.html"><span class="n">03</span><span><b>Syndromes</b><br><span class="d">Three parity answers, read as a binary number, name the flipped qubit.</span></span></a></li>
+    </ol></section>
+    <section class="landing-part"><p class="sp-eyebrow">Part 2 · Time and noise</p><ol class="landing-list">
+      <li id="c04"><a href="04-rounds-grid.html"><span class="n">04</span><span><b>Rounds, ancillas and the grid</b><br><span class="d">How repeated checks with one reused ancilla become a space-time picture.</span></span></a></li>
+      <li id="c05"><a href="05-detection-events.html"><span class="n">05</span><span><b>Detection events</b><br><span class="d">Why a check that changes is the clue, and how data and measurement errors differ.</span></span></a></li>
+      <li id="c06"><a href="06-noise-models.html"><span class="n">06</span><span><b>Noise models</b><br><span class="d">Bit flip, depolarizing and SI1000, and what p means in each.</span></span></a></li>
+    </ol></section>
+    <section class="landing-part"><p class="sp-eyebrow">Part 3 · Decoding</p><ol class="landing-list">
+      <li id="c07"><a href="07-decoder-task.html"><span class="n">07</span><span><b>What a decoder must do</b><br><span class="d">From detections to the most likely errors: the detector error model.</span></span></a></li>
+      <li id="c08"><a href="08-belief-propagation.html"><span class="n">08</span><span><b>Belief propagation</b><br><span class="d">Messages on a graph, and why short cycles trap them.</span></span></a></li>
+      <li id="c09"><a href="09-relay-bp.html"><span class="n">09</span><span><b>Relay-BP</b><br><span class="d">Memory, legs and the lightest converged solution.</span></span></a></li>
+    </ol></section>
+    <section class="landing-part"><p class="sp-eyebrow">Part 4 · Reading results</p><ol class="landing-list">
+      <li id="c10"><a href="10-logical-errors.html"><span class="n">10</span><span><b>Logical errors and ground truth</b><br><span class="d">How every shot is judged exactly, and what the error rate and its interval mean.</span></span></a></li>
+      <li id="c11"><a href="11-listening.html"><span class="n">11</span><span><b>Listening to a shot</b><br><span class="d">Which check plays which note, and why.</span></span></a></li>
+      <li id="c12"><a href="12-limits.html"><span class="n">12</span><span><b>Limits and what next</b><br><span class="d">What the simulator cannot do, and where to read more.</span></span></a></li>
+    </ol></section>
+    <section class="landing-part"><p class="sp-eyebrow">Appendix</p><ol class="landing-list">
+      <li id="a"><a href="appendix-glossary.html"><span class="n">A</span><span><b>Glossary</b><br><span class="d">Every key term, with the chapter that defines it.</span></span></a></li>
+      <li id="b"><a href="appendix-run.html"><span class="n">B</span><span><b>Run it yourself</b><br><span class="d">Install, self-check and the local server.</span></span></a></li>
+      <li id="c"><a href="appendix-references.html"><span class="n">C</span><span><b>References</b><br><span class="d">Papers and sources.</span></span></a></li>
+    </ol></section>
+  </div>
+</main>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body>
+</html>

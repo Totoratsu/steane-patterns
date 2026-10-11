@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Steane code · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html" aria-current="page"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 1 · The code · Chapter 2 · 7 min read</p>
+    <h1>The Steane code: seven qubits, one logical qubit</h1>
+    <p class="lede">You will be able to read the triangle: which vertices are data qubits, which faces are checks, why the same matrix serves both kinds of check, and why any single error can be corrected.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-8">Data qubit</a></dt>
+        <dt><a href="appendix-glossary.html#t-19">Logical qubit</a></dt>
+        <dt><a href="appendix-glossary.html#t-4">Check</a></dt>
+        <dt><a href="appendix-glossary.html#t-6">CSS code</a></dt>
+        <dt><a href="appendix-glossary.html#t-13">Distance</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="triangle">A triangle that holds one qubit</h2>
+    <p>The Steane code stores one <b>logical qubit</b> in seven <b>data qubits</b>. The simulator draws them as a triangle: the seven data qubits are the vertices, numbered 0 to 6, and the three faces are the checks. A <b>check</b> is a parity question about the four data qubits at the corners of one face. Face 1 covers qubits 3, 4, 5 and 6, face 2 covers 1, 2, 5 and 6, and face 3 covers 0, 2, 4 and 6.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage"><div class="sp-tri sp-tri--240" id="f1"></div></div>
+      <figcaption><span class="sp-mono">Figure 2.1</span>Each face covers four vertices, and every vertex lies in at least one face, so every qubit is watched.</figcaption>
+    </figure>
+
+    <p>The code is described by its parameters, written <span data-tex="[[n,k,d]]"></span>: <span data-tex="n"></span> physical qubits, <span data-tex="k"></span> logical qubits and distance <span data-tex="d"></span>. The Steane code has <span data-tex="n=7"></span>, <span data-tex="k=1"></span> and <span data-tex="d=3"></span>.</p>
+
+    <div class="sp-eq">
+      <div data-tex="[[7,1,3]],\qquad H=\begin{pmatrix}0&0&0&1&1&1&1\\0&1&1&0&0&1&1\\1&0&1&0&1&0&1\end{pmatrix}" data-display></div>
+      <span class="sp-eq__n">(2.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: seven qubits carry one logical qubit and the code can correct one error. Each row of the check matrix <span data-tex="H"></span> is one face, with a 1 for each qubit the face covers. This is the matrix in <code>engine/steane.py</code>.</p>
+
+    <h2 id="one-matrix-twice">One matrix, used twice</h2>
+    <p>The Steane code is a <b>CSS code</b>: it keeps bit flips and phase flips apart. The three rows of <span data-tex="H"></span> are used once as Z checks, which detect bit flips, and once as X checks, which detect phase flips. That gives six checks per block, which is why the grid has six columns per logical qubit, orange for the Z checks and blue for the X checks. The same pattern of faces answers both questions, so a phase flip on qubit 4 lights the same blue faces that a bit flip on qubit 4 lights in orange.</p>
+    <p>It works because the rows of <span data-tex="H"></span> overlap on an even number of qubits: any two faces share exactly two vertices. A Z check and an X check on overlapping qubits therefore commute, and measuring one does not disturb the other. Chapter 3 shows how the three answers name the faulty qubit.</p>
+
+    <h2 id="distance-3">Why distance 3 is enough for one error</h2>
+    <p>The <b>distance</b> is the smallest number of errors that turns the stored qubit into a different one while every check still reads zero. For this code it is 3. A single error always leaves some check lit, and the lit pattern points at it, so it can be undone. Two errors can look like one error elsewhere, and the repair then completes a three-error operator on the logical qubit. This is why the simulator reports failures at higher noise: past one error per round, correction can go wrong.</p>
+
+    <h2 id="encoder">Building the logical qubit</h2>
+    <p>The encoder takes the state on qubit 2 (the <code>INPUT</code> in <code>steane.py</code>) and spreads it over the other six, using two kinds of gate. A CNOT copies a basis value, not a state, onto a target. A Hadamard gate (H) puts a qubit into an equal mix of 0 and 1 so that it controls more CNOTs. In the code the sequence is two CNOTs from qubit 2, then three rounds of an H on a pivot qubit followed by three CNOTs. The pivots are qubits 3, 1 and 0.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage sp-diagram">
+        <img src="../img/encoder.svg" alt="Encoder circuit on 7 qubits: H on qubits 3, 1 and 0 and CNOTs from those pivots to the other qubits; a CNOT from qubit 2 to qubits 4 and 5 starts it" style="display:block;max-width:100%;height:auto;margin:0 auto;background:#fff;border-radius:8px;padding:12px">
+      </div>
+      <figcaption><span class="sp-mono">Figure 2.2</span>The encoder as the simulator builds it (drawn from <code>steane.encode</code>): two CNOTs from qubit 2, then three H-and-CNOT stages, 11 CNOTs and 3 H in all.</figcaption>
+    </figure>
+
+    <p>Preparation is not protected: noise in the simulator starts after encoding.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Why it matters here</p>
+      <p>Two such blocks, qubits 0 to 6 and 7 to 13, hold the two logical qubits of every circuit in the simulator. That is 14 data qubits; chapter 4 explains the fifteenth.</p>
+    </div>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Set the noise to <b>Depolarizing</b>, p = 0.01, press Run and watch the triangles. Look at the verdict under each triangle: a shot that ends with a cross is one where the errors were too many for the code.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=depolarizing&amp;p=0.01&amp;rounds=3&amp;shots=96&amp;readout=Z&amp;decoder=relay&amp;view=raw&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:1fr 1fr">
+        <div><h3>Which qubits does face 3 cover?</h3><p>Qubits 0, 2, 4 and 6, the ones with a 1 in the third row of <span data-tex="H"></span>.</p></div>
+        <div><h3>What do the numbers in [[7,1,3]] mean?</h3><p>Seven physical qubits, one logical qubit, distance 3: any single error is corrected.</p></div>
+        <div><h3>Why can one matrix give both kinds of check?</h3><p>The code is CSS: Z checks and X checks each use the rows of <span data-tex="H"></span>, and any two rows overlap on an even number of qubits, so the checks do not disturb each other.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>A. M. Steane (1996). Error correcting codes in quantum theory. <i>Physical Review Letters</i> 77, 793. <a href="https://doi.org/10.1103/PhysRevLett.77.793">doi.org/10.1103/PhysRevLett.77.793</a><br><span class="sp-src-use">Supports: the seven-qubit code.</span></li>
+        <li>A. M. Steane (1996). Simple quantum error-correcting codes. <i>Physical Review A</i> 54, 4741. <a href="https://arxiv.org/abs/quant-ph/9605021">arxiv.org/abs/quant-ph/9605021</a><br><span class="sp-src-use">Supports: a fuller account of the same code.</span></li>
+        <li>A. R. Calderbank, P. W. Shor (1996). Good quantum error-correcting codes exist. <i>Physical Review A</i> 54, 1098. <a href="https://doi.org/10.1103/PhysRevA.54.1098">doi.org/10.1103/PhysRevA.54.1098</a><br><span class="sp-src-use">Supports: CSS codes, the construction the Steane code belongs to.</span></li>
+        <li>M. A. Nielsen, I. L. Chuang (2010). <i>Quantum Computation and Quantum Information</i>, 10th anniversary edition. Cambridge University Press. ISBN 978-1-107-00217-3. <a href="https://www.cambridge.org/9781107002173">www.cambridge.org/9781107002173</a><br><span class="sp-src-use">Supports: the Steane code and its encoder (chapter 10 of the book).</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="01-why-protect.html"><span class="sp-eyebrow">Previous</span><b>Why qubits need protecting</b></a>
+      <a href="03-syndromes.html" class="next"><span class="sp-eyebrow">Next</span><b>Syndromes</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul>
+        <li><a href="#triangle">A triangle that holds one qubit</a></li>
+        <li><a href="#one-matrix-twice">One matrix, used twice</a></li>
+        <li><a href="#distance-3">Why distance 3</a></li>
+        <li><a href="#encoder">Building the logical qubit</a></li>
+        <li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/steane.py" data-src="engine/steane.py">engine/steane.py</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="01-why-protect.html">Ch. 1 · Why qubits need protecting</a></li><li><a href="03-syndromes.html">Ch. 3 · Syndromes</a></li><li><a href="04-rounds-grid.html">Ch. 4 · Rounds, ancillas, the grid</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    var G = window.SteanePatterns;
+    document.getElementById('f1').innerHTML = G.SteaneTriangle({ name: 'A', caption: 'vertices 0 to 6 · faces 1 to 3' });
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" font-family="sans-serif" font-size="15" role="img" aria-label="An X error on the control of a CNOT spreads to the target: the frame shows X on both qubits after the gate">
+  <g stroke="#333" stroke-width="1.5">
+    <line x1="40" y1="70" x2="760" y2="70"/><line x1="40" y1="150" x2="760" y2="150"/>
+  </g>
+  <line x1="300" y1="70" x2="300" y2="150" stroke="#333" stroke-width="1.5"/>
+  <circle cx="300" cy="70" r="6" fill="#333"/>
+  <circle cx="300" cy="150" r="16" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <path d="M292 150 H308 M300 142 V158" stroke="#333" stroke-width="1.5"/>
+  <g fill="#c0392b" font-weight="bold" text-anchor="middle">
+    <text x="130" y="75">X</text>
+  </g>
+  <g fill="#c0392b" font-weight="bold" text-anchor="middle">
+    <text x="600" y="75">X</text><text x="600" y="155">X</text>
+  </g>
+  <g fill="#111" text-anchor="start">
+    <text x="20" y="40">control</text><text x="20" y="130">target</text>
+  </g>
+  <g fill="#111" text-anchor="middle" font-size="14">
+    <text x="130" y="110">error here</text><text x="600" y="110">frame after the CNOT:</text>
+    <text x="600" y="126">X on both qubits</text>
+  </g>
+  <text x="400" y="200" text-anchor="middle" font-size="14" fill="#555">Rule in engine/circuit.py: an X on the control is copied to the target (x[t] ^= x[c]).</text>
+</svg>

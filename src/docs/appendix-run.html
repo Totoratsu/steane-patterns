@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run it yourself · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html" aria-current="page"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Appendix</p>
+    <h1>Run it yourself: install, check, serve</h1>
+    <p class="lede">Install two packages, run the self-check in about half a minute, and start the simulator on your own machine with the same engine that runs on Qollab.</p>
+
+    <h2 id="install">Install and check</h2>
+    <p>You need Python 3 and the two packages in <code>requirements.txt</code>: Qiskit 2.0 or newer, and numpy. From the repository root:</p>
+    <pre><code>pip install -r requirements.txt
+python -m engine.selfcheck</code></pre>
+    <p>The <b>self-check</b> is a script of assertions that fails loudly if the engine is wrong. It checks the encoder (stabilizers and logical operators), that Relay-BP corrects every single fault, that p = 0 lights nothing and gives only 00 and 11 for a Bell pair, that bit flips light mostly Z checks, that the SI1000 logical error grows with p, that the limit matches brute force over all 2<sup>17</sup> errors of one round, and that Relay-BP beats BP and sits near the limit. On the machine used for this page it took about 30 seconds and printed <code>ok</code> for each of its five checks. It also reports that plain BP miscorrects 4 of the 37 single faults, and a decoder-only comparison at depolarizing p = 0.06: BP 0.239, Relay-BP 0.16575, limit 0.163. Your runtime depends on your processor.</p>
+
+    <h2 id="serve">Run the simulator locally</h2>
+    <pre><code>python scripts/serve.py</code></pre>
+    <p>Then open <code>http://localhost:8000</code>. An optional argument sets another port, for example <code>python scripts/serve.py 8080</code>. The script serves the same page and swaps <code>main.js</code> for a short shim that sends every Run to a local <code>/run</code> endpoint, where native Python calls <code>engine.bridge.run</code> on Qiskit’s BasicSimulator. Opening <code>index.html</code> directly from disk does not work, because <code>engine.bridge</code> only exists inside Qollab or behind this server.</p>
+    <p>The documentation you are reading is static. Serve the repository root with any file server, for example <code>python -m http.server</code>, and open <code>src/docs/index.html</code>.</p>
+
+    <h2 id="qollab">The same engine on Qollab</h2>
+    <p>On Qollab, <code>main.js</code> imports the Python module <code>engine.bridge</code> and passes it the <code>backend</code> you picked. Press Run with the built-in Qiskit simulator. The engine is the same code and the same simulator as in local mode; local mode is only faster, because native Python replaces the browser. The two decoders are written in plain numpy for that reason: the official <code>relay-bp</code> package is Rust and cannot be installed in the browser. IonQ backends are not supported (see <a href="12-limits.html">chapter 12</a>).</p>
+
+    <h2 id="layout">Project layout</h2>
+    <pre><code>index.html, main.js   Qollab entry points (must stay at the root)
+requirements.txt      qiskit, numpy
+engine/               Python: steane, noise, circuit, decoders, bridge
+src/js/               ui.js, audio.js (app); steane-patterns.js (docs)
+src/css/              tokens.css, main.css (app); docs.css (docs)
+src/img/              diagrams (SVG)
+src/fonts/            Geist, Instrument Serif and their licences
+src/docs/             this documentation (static HTML)
+scripts/              serve.py (local mode), benchmark.py, make_diagrams.py</code></pre>
+
+    <h2 id="licence">Licence</h2>
+    <p>Steane Patterns is released under the MIT licence, copyright 2026 Nixon Lizcano. The full text is in <code>LICENSE</code> at the repository root.</p>
+    <figure class="sp-figure">
+      <div class="sp-figure__stage sp-diagram"><img src="../img/code-path.svg" alt="Code path of one Run: page, entry point, bridge.run, build circuits, one backend job, decoders, JSON back to the page and drawing"></div>
+      <figcaption><span class="sp-mono">Figure B.1</span>The path of one Run. Only the Python engine runs the quantum part; the page draws what comes back.</figcaption>
+    </figure>
+
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>A. Javadi-Abhari et al. (2024). Quantum computing with Qiskit. arXiv:2405.08810. <a href="https://arxiv.org/abs/2405.08810">arxiv.org/abs/2405.08810</a><br><span class="sp-src-use">Supports: Qiskit.</span></li>
+        <li>Qiskit documentation. <code>BasicSimulator</code>, which limits statevector simulation to 24 qubits. <a href="https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.providers.basic_provider.BasicSimulator">quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.providers.basic_provider.BasicSimulator</a><br><span class="sp-src-use">Supports: the simulator used for every run.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="appendix-glossary.html"><span class="sp-eyebrow">Previous</span><b>Glossary</b></a>
+      <a href="appendix-references.html" class="next"><span class="sp-eyebrow">Next</span><b>References</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul><li><a href="#install">Install and check</a></li><li><a href="#serve">Run locally</a></li><li><a href="#qollab">On Qollab</a></li><li><a href="#layout">Project layout</a></li><li><a href="#licence">Licence</a></li><li><a href="#sources">Sources</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../requirements.txt" data-src="requirements.txt">requirements.txt</a></li><li><a class="mono" href="../../scripts/serve.py" data-src="scripts/serve.py">scripts/serve.py</a></li><li><a class="mono" href="../../engine/selfcheck.py" data-src="engine/selfcheck.py">engine/selfcheck.py</a></li><li><a class="mono" href="../../LICENSE" data-src="LICENSE">LICENSE</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="index.html">Documentation home</a></li><li><a href="12-limits.html">Ch. 12 · Limits and what next</a></li><li><a href="appendix-glossary.html">Appendix A · Glossary</a></li></ul>
+    </div>
+  </aside>
+</div>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

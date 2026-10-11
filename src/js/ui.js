@@ -16,6 +16,12 @@ const STEANE_H = [[0, 0, 0, 1, 1, 1, 1], [0, 1, 1, 0, 0, 1, 1], [1, 0, 1, 0, 1, 
 
 const $ = (id) => document.getElementById(id);
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+// Canvas colours come from the design tokens in css/tokens.css, so both themes work.
+const TOKEN = { off: '--cell-off', z: '--check-z', x: '--check-x', d: '--ink', mark: '--blame', muted: '--ink-muted', ok: '--ok', bad: '--bad', panel: '--surface', ink: '--ink' };
+const PLAY = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11l9-5.5z"/></svg><span>Play</span>';
+const PAUSE = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 1.5h3v11h-3zM8.5 1.5h3v11h-3z"/></svg><span>Pause</span>';
+// Query parameters the documentation uses to open the simulator in a prepared state.
+const CIRCUITS = { bell: 'Bell pair (H, CX)', zero: '|0⟩|0⟩', plus: '|+⟩|0⟩', t: 'T|+⟩ and X', ry: 'Ry(π/3) then CZ' };
 const mean = (pts) => [0, 1].map((i) => pts.reduce((a, p) => a + p[i], 0) / pts.length);
 const pct = (v) => `${(v * 100).toFixed(1)}%`;
 
@@ -35,6 +41,12 @@ function triangle(x, top, w) {
 
 export function start(api) {
   const synth = new Synth();
+
+  // Sound map: same scale as audio.js (pentatonic semitones; block A on 220 Hz, B an octave up).
+  const SEMI = [0, 2, 4, 7, 9, 12], NAMES = ['Z1', 'Z2', 'Z3', 'X1', 'X2', 'X3'];
+  $('soundmap').innerHTML = [['A', 220, ''], ['B', 440, ', one octave up']].map(([b, base, extra]) =>
+    `<p class="sm-title">Logical qubit ${b} · base ${base} Hz${extra}</p><div class="sm-row">` +
+    NAMES.map((n, k) => `<div class="sm-cell ${k < 3 ? 'z' : 'x'}"><b>${n}</b>${(base * 2 ** (SEMI[k] / 12)).toFixed(1)} Hz<br>+${SEMI[k]} semitones<br>${k < 3 ? 'triangle' : 'sine'}</div>`).join('') + '</div>').join('');
   const st = { data: null, shot: 0, row: 0, playing: true, view: 'raw', timer: null };
 
   for (const name of Object.keys(PRESETS)) $('preset').add(new Option(name, name));
@@ -44,6 +56,14 @@ export function start(api) {
   const showP = () => { $('pOut').textContent = (+$('p').value).toFixed(3); };
   $('p').oninput = showP;
   showP();
+  $('play').innerHTML = PAUSE;
+  document.fonts?.ready.then(() => draw());
+
+  // "How to read this" is open on the first visit and closed afterwards.
+  try {
+    if (localStorage.getItem('sp-guide-seen')) $('guideBox').open = false;
+    else localStorage.setItem('sp-guide-seen', '1');
+  } catch { /* storage can be blocked; keep the default */ }
 
   $('run').onclick = async () => {
     synth.wake();
@@ -87,7 +107,7 @@ export function start(api) {
   $('sound').onchange = () => { synth.on = $('sound').checked; };
   $('play').onclick = () => {
     st.playing = !st.playing;
-    $('play').textContent = st.playing ? 'Pause' : 'Play';
+    $('play').innerHTML = st.playing ? PAUSE : PLAY;
     if (st.playing) { synth.wake(); tick(); } else clearTimeout(st.timer);
   };
   const jump = (d) => {
@@ -146,8 +166,9 @@ export function start(api) {
     const g = cv.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, W, H);
-    const col = Object.fromEntries(['off', 'z', 'x', 'd', 'mark', 'muted', 'ok', 'bad', 'panel', 'ink'].map((k) => [k, css(`--${k}`)]));
-    const font = (s) => { g.font = `${Math.max(9, s)}px JetBrains Mono, monospace`; };
+    const col = Object.fromEntries(Object.entries(TOKEN).map(([k, v]) => [k, css(v)]));
+    const mono = css('--font-mono');
+    const font = (s) => { g.font = `500 ${Math.max(9, s)}px ${mono}`; };
     font(u * 0.28);
     g.textBaseline = 'middle';
 
@@ -157,11 +178,15 @@ export function start(api) {
     const tris = [triangle(padL + 3.5 * u, yTri, triW), triangle(padL + 11.5 * u, yTri, triW)];
 
     g.fillStyle = col.muted; g.textAlign = 'center';
-    for (let c = 0; c < 12; c++) g.fillText(CHECK_LABELS[c % 6], cx(c) + u / 2, padT - 10);
+    for (let c = 0; c < 12; c++) {
+      g.fillText(CHECK_LABELS[c % 6], cx(c) + u / 2, padT - 12);
+      g.fillStyle = c % 6 < 3 ? col.z : col.x; g.fillRect(cx(c) + 4, padT - 3, u - 8, 2);
+      g.fillStyle = col.muted;
+    }
     g.textAlign = 'right';
     for (let r = 0; r < rows; r++) g.fillText(`r${r + 1}`, padL - 8, ry(r) + u / 2);
     g.textAlign = 'left';
-    g.fillText('↑ ancilla q14 readouts   ↓ data qubits', padL, padT + rows * u + 12);
+    g.fillText('ancilla q14 readouts above · data qubits below', padL, padT + rows * u + 12);
 
     const box = (x, y, fill, alpha = 1) => {
       g.globalAlpha = 1; g.fillStyle = col.off; g.beginPath(); g.roundRect(x + 2, y + 2, u - 4, u - 4, 4); g.fill();
@@ -184,13 +209,16 @@ export function start(api) {
         if (zA[i]) { g.globalAlpha = zA[i]; g.fillStyle = col.z; g.fill(); g.globalAlpha = 1; }
         g.strokeStyle = col.panel; g.lineWidth = 3; g.stroke();
         if (xA[i]) { poly(f, 0.68); g.globalAlpha = xA[i]; g.strokeStyle = col.x; g.lineWidth = 3.5; g.stroke(); g.globalAlpha = 1; }
-        font(u * 0.26); g.fillStyle = col.ink; g.textAlign = 'center';
-        g.fillText(`${i + 1}`, ...mean(f));
+        // face number in a small chip, so it stays legible on any fill
+        const [fx, fy] = mean(f);
+        g.beginPath(); g.arc(fx, fy, u * 0.24, 0, 7); g.fillStyle = col.panel; g.fill();
+        font(u * 0.26); g.fillStyle = col.muted; g.textAlign = 'center';
+        g.fillText(`${i + 1}`, fx, fy + 0.5);
       });
       qs.forEach(([x, y], q) => {
         g.beginPath(); g.arc(x, y, rad, 0, 7); g.fillStyle = col.panel; g.fill();
         if (vA[q]) { g.globalAlpha = vA[q]; g.fillStyle = vFill; g.fill(); g.globalAlpha = 1; }
-        g.strokeStyle = col.muted; g.lineWidth = 1; g.stroke();
+        g.strokeStyle = col.ink; g.lineWidth = 1.5; g.stroke();
         if (rad >= 9) { font(rad * 0.85); g.fillStyle = vA[q] > 0.5 ? col.panel : col.ink; g.fillText(k * 7 + q, x, y + 0.5); }
         if (rings.includes(k * 7 + q)) { g.beginPath(); g.arc(x, y, rad + 4, 0, 7); g.strokeStyle = col.mark; g.lineWidth = 2.5; g.stroke(); }
       });
@@ -239,7 +267,7 @@ export function start(api) {
         vA = shot.data.slice(k * 7, k * 7 + 7);
         rings = key === 'none' ? [] : shot[key].data_marks;
         const v = verdict(shot, k);
-        caption = `${name(k)} = ${v.logical[0]} ${v.ok ? '✓' : '✗'}`;
+        caption = `${name(k)} = ${v.logical[0]} · ${v.ok ? 'corrected' : 'logical error'}`;
         capColor = v.ok ? col.ok : col.bad;
       } else if (shown > 0) {
         // during the rounds: the faces mirror this block's latest row of checks in the grid
@@ -249,10 +277,10 @@ export function start(api) {
       block(k, zA, xA, col.d, vA, rings, caption, capColor);
     }
     let info = `shot ${st.shot + 1}/${n}`;
-    if (shown > 0 && shown <= rows) info += `  round ${shown}`;
+    if (shown > 0 && shown <= rows) info += ` · round ${shown}`;
     if (shown > rows) {
       const v = verdict(shot);
-      info += `  logical = ${v.logical.join('')}  ${v.ok ? '✓ corrected' : '✗ logical error'}`;
+      info += ` · logical = ${v.logical.join('')} · ${v.ok ? 'corrected' : 'logical error'}`;
     }
     $('shotInfo').textContent = info;
   }
@@ -267,13 +295,13 @@ export function start(api) {
       ['relay', 'Relay-BP', e.relay, nc('relay')], ...(e.limit === null ? [] : [['limit', 'Optimal decoder (limit)', e.limit]])];
     const top = Math.max(0.02, ...bars.map(([k, , v]) => v + (k === 'limit' ? 0 : ci(v)))) * 1.1;
     const w = (v) => Math.min(100, (v / top) * 100);
+    const note = (k, v, notConv) => [k === 'limit' ? 'exact' : `± ${pct(ci(v))}`, notConv === undefined ? '' : `${pct(notConv)} of shots did not converge`].filter(Boolean).join(' · ');
+    const whisker = (v) => `<div class="ci"><i style="left:${w(Math.max(0, v - ci(v)))}%;width:${w(Math.min(top, v + ci(v))) - w(Math.max(0, v - ci(v)))}%"></i></div>`;
     $('bars').innerHTML = bars.map(([k, label, v, notConv]) =>
-      `<div class="bar ${k}">${label} <b>${pct(v)}</b>` +
-      (k === 'limit' ? ' <small>exact</small>' : ` <small>± ${pct(ci(v))}</small>`) +
-      (notConv === undefined ? '' : `<small class="nc">${pct(notConv)} of shots did not converge</small>`) +
-      `<div class="track"><div class="fill" style="width:${w(v)}%"></div>` +
+      `<div class="bar ${k}"><div class="bar-head"><span>${label}</span><b>${pct(v)}</b></div>` +
+      `<div class="track" role="img" aria-label="${label}: ${pct(v)}"><div class="fill" style="width:${w(v)}%"></div>` +
       (k === 'limit' || e.limit === null ? '' : `<div class="lim" style="left:${w(e.limit)}%" title="optimal-decoder limit"></div>`) +
-      '</div></div>').join('') +
+      `</div>${k === 'limit' ? '' : whisker(v)}<p class="bar-note">${note(k, v, notConv)}</p></div>`).join('') +
       `<p class="note">${e.limit === null
         ? 'No optimal-decoder limit for SI1000: its noise is circuit-level, and the exact limit would need a circuit-level error model, not the rough one the decoders use.'
         : 'Black tick = limit: the exact error rate of the best decoder that reads one error type at a time, for this code and noise. With few shots a decoder can land below it by chance; over many shots, only a joint decoder can beat it.'} ± is the 95% interval for ${n} shots.</p>`;
@@ -284,4 +312,14 @@ export function start(api) {
   }
 
   draw();
+
+  // Open in a prepared state: ?circuit=bell&noise=depolarizing&p=0.03&rounds=3&shots=256&readout=Z&decoder=relay&view=det&run=1
+  const q = new URLSearchParams(location.search);
+  const setSel = (id, v) => { if (v !== null && [...$(id).options].some((o) => o.value === v || o.text === v)) $(id).value = v; };
+  if (CIRCUITS[q.get('circuit')]) { $('preset').value = CIRCUITS[q.get('circuit')]; setPreset(); }
+  setSel('channel', q.get('noise')); setSel('rounds', q.get('rounds')); setSel('shots', q.get('shots'));
+  setSel('basis', q.get('readout')); setSel('decoder', q.get('decoder'));
+  if (q.get('p') !== null && +q.get('p') >= 0 && +q.get('p') <= 0.1) { $('p').value = q.get('p'); showP(); }
+  if (['raw', 'det', 'heat'].includes(q.get('view'))) document.querySelector(`[data-view="${q.get('view')}"]`).click();
+  if (q.get('run') === '1') $('run').click();
 }

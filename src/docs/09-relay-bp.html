@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relay-BP · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+<nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html" aria-current="page"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 3 · Decoding · Chapter 9 · 6 min read</p>
+    <h1>Relay-BP: giving belief propagation a memory</h1>
+    <p class="lede">Relay-BP reruns belief propagation in short legs with a random memory strength each time and keeps the lightest answer. You will be able to say why that escapes the traps of Chapter 8 and read its benchmark.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-22">Memory BP</a></dt>
+        <dt><a href="appendix-glossary.html#t-23">Memory strength</a></dt>
+        <dt><a href="appendix-glossary.html#t-16">Leg</a></dt>
+        <dt><a href="appendix-glossary.html#t-29">Optimal-decoder limit</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="memory">Memory in the messages</h2>
+    <p>Plain BP forgets. Each iteration rebuilds every qubit’s belief from its prior and the latest messages. <b>Memory BP</b> lets a qubit keep part of what it already believed. In <code>_minsum</code> the prior <span data-tex="\ell_v"></span> is replaced by a blend with the previous total <span data-tex="M_v"></span>, using a <b>memory strength</b> <span data-tex="\gamma"></span>.</p>
+    <div class="sp-eq">
+      <div data-tex="\lambda_v=(1-\gamma_v)\,\ell_v+\gamma_v\,M_v" data-display></div>
+      <span class="sp-eq__n">(9.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: with <span data-tex="\gamma_v=0"></span> the qubit starts each iteration from its prior, which is the BP of Chapter 8; with <span data-tex="\gamma_v>0"></span> it leans on its own history, which damps the echoes that cycles create; with <span data-tex="\gamma_v<0"></span> it leans away from its history, which breaks a belief that has locked in.</p>
+    <p>One fixed <span data-tex="\gamma"></span> helps some syndromes and not others. The repository’s Relay-BP therefore does not pick one.</p>
+
+    <h2 id="relay">Legs, a relay of runs</h2>
+    <p>The first <b>leg</b> is memory BP with the same <span data-tex="\gamma"></span> = 0.125 on every qubit, for up to 60 iterations. Then comes a relay of up to 80 further legs of up to 50 iterations each. Before every leg the decoder draws a fresh <span data-tex="\gamma_v"></span> for each qubit, uniformly between −0.24 and 0.66, so each leg explores differently. Each leg starts from the previous leg’s posteriors, not from the priors. These values come from Müller et al., who tuned them for larger codes; here they are reused unchanged.</p>
+    <figure class="sp-figure">
+      <div class="sp-figure__stage sp-diagram"><img src="../img/legs.svg" alt="Relay-BP legs: leg 0 with fixed memory, later legs with random memory starting from the previous posteriors, then the lightest of up to eight converged answers"></div>
+      <figcaption><span class="sp-mono">Figure 9.1</span>Relay-BP as a relay: each leg is one memory-BP run. The answer kept is the one with the smallest likelihood cost.</figcaption>
+    </figure>
+
+    <p>A leg that ends with a guess reproducing the syndrome has converged, and that guess is stored. Relay-BP does not stop at the first one. It keeps collecting until it holds 8 solutions, or runs out of legs, and returns the lightest, meaning the one with the smallest total <span data-tex="\sum_v e_v\,\ell_v"></span>. That is the step Chapter 8 lacked: the weight-4 guess BP stopped on is a valid solution, but a lighter one from a later leg beats it.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage" style="display:block">
+        <table class="sp-table" aria-label="Logical error rate per block, decoder only, depolarizing noise, three rounds, for BP, Relay-BP and the optimal-decoder limit">
+          <thead><tr><th scope="col">Depolarizing p</th><th scope="col">BP</th><th scope="col">Relay-BP</th><th scope="col">Limit</th></tr></thead>
+          <tbody>
+            <tr><td>0.02</td><td>6.7%</td><td class="is-hit">2.9%</td><td>2.6%</td></tr>
+            <tr><td>0.03</td><td>9.9%</td><td class="is-hit">5.1%</td><td>5.4%</td></tr>
+            <tr><td>0.06</td><td>24.4%</td><td class="is-hit">16.7%</td><td>16.3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><span class="sp-mono">Figure 9.2</span>Relay-BP lands within a few percent of the optimal-decoder limit while plain BP fails far more often. Decoder only, 3 rounds, 3,000 samples per row, seed 1; the 95% interval is about ±0.8 points at 5%, so 5.1% against a limit of 5.4% is a tie. Reproduce with <code>python scripts/benchmark.py</code>.</figcaption>
+    </figure>
+
+    <h2 id="results">What it achieves</h2>
+    <p>The self-check feeds all 37 single faults of the three-round model to Relay-BP and asserts that every one is corrected, with a result that matches the syndrome and the right logical class. Plain BP, on the same faults, misses 4. Figure 9.2 shows the benchmark behind these numbers. A full circuit run agrees: 2,816 shots at depolarizing p = 0.03 give BP 20.8%, Relay-BP 11.7% and a limit of 10.5% per shot.</p>
+    <p>The remaining gap to the limit is not a failure of the legs. The optimal decoder adds up all errors that act the same way on the logical qubit, which a decoder that returns one error cannot do, and more legs do not close it. On a code this small Relay-BP is already near the ceiling. The method is from Müller et al., “Improved belief propagation is sufficient for real-time decoding of quantum memory” (<a href="https://arxiv.org/abs/2506.01779">arXiv:2506.01779</a>). The decoder here is a plain numpy version, because the authors’ package is written in Rust and does not run in the browser. Its default numbers are those of <code>relay_bp</code> in the repository, not necessarily the paper’s.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Careful</p>
+      <p>Relay-BP is random: it draws its memory strengths from a random generator, so two runs on the same syndrome can return different, equally valid, solutions. Judge it by rates over many shots, not by one.</p>
+    </div>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Choose Depolarizing noise, p = 0.03, 256 shots, then compare the BP and Relay-BP bars and the black limit tick. Look for Relay-BP’s bar sitting at the tick while BP’s is well above. Use at least 192 shots to see the gap through the statistical noise.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=depolarizing&amp;p=0.03&amp;rounds=3&amp;shots=256&amp;readout=Z&amp;decoder=relay&amp;view=det&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:1fr 1fr">
+        <div><h3>What does a negative memory strength do?</h3><p>It pushes a qubit’s belief away from its previous total, which can undo a belief that has locked in on a wrong answer.</p></div>
+        <div><h3>Why keep up to 8 solutions instead of the first?</h3><p>Any guess that reproduces the syndrome ends a leg, but a heavy one can be wrong. Taking the lightest of several is likelier to be the real error.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>T. Müller, T. Alexander, M. E. Beverland, M. Bühler, B. R. Johnson, T. Maurer, D. Vandeth (2025). Improved belief propagation is sufficient for real-time decoding of quantum memory. arXiv:2506.01779. <a href="https://arxiv.org/abs/2506.01779">arxiv.org/abs/2506.01779</a><br><span class="sp-src-use">Supports: Relay-BP and its default parameters.</span></li>
+        <li><code>relay-bp</code> on PyPI. Python bindings for the Rust implementation of Relay-BP (Apache 2.0). <a href="https://pypi.org/project/relay-bp/">pypi.org/project/relay-bp/</a><br><span class="sp-src-use">Supports: the authors’ Rust package, which this project does not use.</span></li>
+        <li>P. Panteleev, G. Kalachev (2021). Degenerate quantum LDPC codes with good finite length performance. <i>Quantum</i> 5, 585. <a href="https://doi.org/10.22331/q-2021-11-22-585">doi.org/10.22331/q-2021-11-22-585</a><br><span class="sp-src-use">Supports: degenerate quantum LDPC codes and finite-length decoding.</span></li>
+        <li>D. Poulin, Y. Chung (2008). On the iterative decoding of sparse quantum codes. <i>Quantum Information and Computation</i> 8, 987. <a href="https://arxiv.org/abs/0801.1241">arxiv.org/abs/0801.1241</a><br><span class="sp-src-use">Supports: iterative decoding of quantum codes.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="08-belief-propagation.html"><span class="sp-eyebrow">Previous</span><b>Belief propagation</b></a>
+      <a href="10-logical-errors.html" class="next"><span class="sp-eyebrow">Next</span><b>Logical errors and ground truth</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul>
+        <li><a href="#memory">Memory in the messages</a></li>
+        <li><a href="#relay">Legs, a relay of runs</a></li>
+        <li><a href="#results">What it achieves</a></li>
+        <li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/decoders.py" data-src="engine/decoders.py">engine/decoders.py</a></li><li><a class="mono" href="../../README.md" data-src="README.md">README.md</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="08-belief-propagation.html">Ch. 8 · Belief propagation</a></li><li><a href="10-logical-errors.html">Ch. 10 · Logical errors</a></li><li><a href="appendix-references.html">Appendix C · References</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

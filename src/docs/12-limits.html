@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limits and what next · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html" aria-current="page"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 4 · Reading results · Chapter 12 · 5 min read</p>
+    <h1>Limits and what next</h1>
+    <p class="lede">The simulator has hard limits and one approximate model. You will be able to say which results to trust, which to treat with care, and where the project could go.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-2">Backend</a></dt><dt><a href="appendix-glossary.html#t-25">Mid-circuit measurement</a></dt><dt><a href="appendix-glossary.html#t-43">Statevector</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="what-it-cannot-do">What the simulator cannot do</h2>
+    <p>Each limit below comes from a line in the repository, not from a general statement about quantum computers. A <b>backend</b> is the machine or simulator that runs the circuits; the page asks it to measure and reset a single ancilla after each check, many times in one circuit.</p>
+    <p><b>No IonQ backends.</b> The function <code>_backend_problem</code> in <code>engine/bridge.py</code> refuses any backend whose name contains "ionq" or whose operation list lacks <code>reset</code>. IonQ documents mid-circuit measurement as supported on some targets and not others, and single-qubit reset as supported. The IonQ simulator supports it, and the qiskit-ionq provider says QPU support is rolling out. This project has not been run on IonQ, so it refuses every IonQ backend until a target is confirmed; this is our caution, not an IonQ limit. Without the reuse, two Steane blocks with fresh ancillas for the 12 checks would need 26 qubits, more than the 24 that Qiskit’s <code>BasicSimulator</code> allows for a statevector. The page shows the message and asks for the built-in Qiskit simulator.</p>
+    <p><b>Caps on rounds and shots.</b> <code>MAX_ROUNDS</code> is 5 and <code>MAX_SHOTS</code> is 256, and the noise strength <span data-tex="p"></span> must be between 0 and 0.1, or the run is refused with an error. Rounds and shots above the caps are clamped to them. The reason is cost: the simulation is a full statevector, run shot by shot, because the circuits contain mid-circuit measurements. The README gives the defaults, 3 rounds and 48 shots, as taking a few seconds natively and more in the browser.</p>
+    <p><b>Logical gates only before encoding.</b> Your gates act on the two input qubits, then each qubit is encoded. Preparation is not fault-tolerant: noise starts after encoding. Gates between rounds would need the decoder model to track errors moving between the two blocks. As built, the two blocks are decoded independently.</p>
+
+    <h2 id="model-limits">Where the model is approximate</h2>
+    <p>The decoders work on a phenomenological model: data errors between rounds and measurement errors, one Pauli type per block. For SI1000 it is a rough fit. The circuit-level noise, the 2-qubit depolarizing after each CX and the hook errors that spread through those gates, is not in the decoders' model. The priors for SI1000 are <span data-tex="5p"></span> for data errors and <span data-tex="9p"></span> for measurement errors, a fit, not a derivation. That is why Chapter 10 shows no optimal-decoder limit for it. A real decoder with an imperfect noise model faces the same situation.</p>
+    <p>Idle noise in SI1000 is charged once per round, as if the 12 checks ran in parallel on 12 ancillas. Reusing one ancilla is only a way to stay within the qubit limit.</p>
+
+    <h2 id="what-next">What next</h2>
+    <p>Three directions follow from what the chapters already showed.</p>
+    <p><b>Bigger codes.</b> On the Steane code Relay-BP sits within a few percent of the optimal decoder, so there is little room left to improve it. We expect Relay-BP to pull further ahead of BP on large qLDPC codes, where BP's trapping sets hurt more. The official <code>relay-bp</code> package is written in Rust and cannot be installed in the browser, which is why this project has its own numpy version.</p>
+    <p><b>Joint decoding.</b> The page decodes X and Z separately. Chapter 10 explains why a joint decoder that uses Y correlations can beat the separate limit under depolarizing noise.</p>
+    <p><b>An exact circuit-level model.</b> A detector error model derived from the circuit itself, hook errors included, would make a limit for SI1000 meaningful. This is the missing piece for an exact SI1000 limit.</p>
+    <p>To go on from here, Appendix B shows how to run the simulator and <code>python -m engine.selfcheck</code> yourself, and Appendix C lists the papers: the Relay-BP paper (Müller et al., arXiv:2506.01779) and the honeycomb-memory paper that defines the SI1000 noise model.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Run SI1000 at p = 0.01 with the maximum 5 rounds and 256 shots. Look for the Optimal decoder (limit) bar: it is absent. Then switch to depolarizing at the same p and watch it appear.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=si1000&amp;p=0.01&amp;rounds=5&amp;shots=256&amp;readout=Z&amp;decoder=relay&amp;view=det&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:repeat(3,1fr)">
+        <div><h3>Why does an IonQ backend get a message instead of a run?</h3><p>Repeated rounds with one reused ancilla need mid-circuit measurement and reset, which IonQ documents for some targets only. The project has not been run on IonQ, so it refuses those backends as a precaution.</p></div><div><h3>What are the largest numbers of rounds and shots the page accepts?</h3><p>5 rounds and 256 shots; larger requests are clamped.</p></div><div><h3>Why can’t the limit be shown for SI1000?</h3><p>Its decoder priors are approximate and hook errors are not modelled, so an exact limit would describe a different model.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>IonQ documentation. OpenQASM 3 on IonQ: mid-circuit measurement is supported on some targets and not others. <a href="https://docs.ionq.com/api-reference/v0.4/openqasm3">docs.ionq.com/api-reference/v0.4/openqasm3</a><br><span class="sp-src-use">Supports: mid-circuit measurement support on IonQ targets.</span></li>
+        <li>qiskit-ionq README. Mid-circuit measurement and reset are supported, and QPU support is “rolling out”. <a href="https://github.com/qiskit-community/qiskit-ionq">github.com/qiskit-community/qiskit-ionq</a><br><span class="sp-src-use">Supports: the state of IonQ mid-circuit measurement through the Qiskit provider.</span></li>
+        <li>Qiskit documentation. <code>BasicSimulator</code>, which limits statevector simulation to 24 qubits. <a href="https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.providers.basic_provider.BasicSimulator">quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.providers.basic_provider.BasicSimulator</a><br><span class="sp-src-use">Supports: the 24-qubit statevector limit.</span></li>
+        <li>T. Müller, T. Alexander, M. E. Beverland, M. Bühler, B. R. Johnson, T. Maurer, D. Vandeth (2025). Improved belief propagation is sufficient for real-time decoding of quantum memory. arXiv:2506.01779. <a href="https://arxiv.org/abs/2506.01779">arxiv.org/abs/2506.01779</a><br><span class="sp-src-use">Supports: Relay-BP on larger codes.</span></li>
+        <li><code>relay-bp</code> on PyPI. Python bindings for the Rust implementation of Relay-BP (Apache 2.0). <a href="https://pypi.org/project/relay-bp/">pypi.org/project/relay-bp/</a><br><span class="sp-src-use">Supports: the Rust implementation.</span></li>
+        <li>C. Gidney, M. Newman, A. Fowler, M. Broughton (2021). A fault-tolerant honeycomb memory. <i>Quantum</i> 5, 605. <a href="https://arxiv.org/abs/2108.10457">arxiv.org/abs/2108.10457</a><br><span class="sp-src-use">Supports: the SI1000 noise model.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="11-listening.html"><span class="sp-eyebrow">Previous</span><b>Listening to a shot</b></a>
+      <a href="appendix-glossary.html" class="next"><span class="sp-eyebrow">Next</span><b>Glossary</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul><li><a href="#what-it-cannot-do">What it cannot do</a></li><li><a href="#model-limits">Where the model is approximate</a></li><li><a href="#what-next">What next</a></li><li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/bridge.py" data-src="engine/bridge.py">engine/bridge.py</a></li><li><a class="mono" href="../../engine/noise.py" data-src="engine/noise.py">engine/noise.py</a></li><li><a class="mono" href="../../README.md" data-src="README.md">README.md</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="04-rounds-grid.html">Ch. 4 · Rounds, ancillas, the grid</a></li><li><a href="06-noise-models.html">Ch. 6 · Noise models</a></li><li><a href="10-logical-errors.html">Ch. 10 · Logical errors</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

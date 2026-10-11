@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 150" font-family="sans-serif" font-size="15" role="img" aria-label="From detections to the logical value: detections, detector error model, decoder, guessed errors, logical value compared with truth">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#333"/></marker></defs>
+  <g fill="#f6f6f6" stroke="#333" stroke-width="1.5">
+    <rect x="5" y="45" width="165" height="70" rx="8"/>
+    <rect x="200" y="45" width="165" height="70" rx="8"/>
+    <rect x="395" y="45" width="165" height="70" rx="8" fill="#e8f0fb"/>
+    <rect x="590" y="45" width="140" height="70" rx="8"/>
+    <rect x="760" y="45" width="135" height="70" rx="8"/>
+  </g>
+  <g fill="#111" text-anchor="middle">
+    <text x="87" y="75">Detections d</text><text x="87" y="95" font-size="14">changed checks</text>
+    <text x="282" y="75">Error model H·e = d</text><text x="282" y="95" font-size="14">which errors fit</text>
+    <text x="477" y="75">Decoder</text><text x="477" y="95" font-size="14">BP or Relay-BP</text>
+    <text x="660" y="75">Guess e</text><text x="660" y="95" font-size="14">logical = parity of e</text>
+    <text x="827" y="75">Compare</text><text x="827" y="95" font-size="14">with the true flip</text>
+  </g>
+  <g stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <line x1="172" y1="80" x2="197" y2="80"/>
+    <line x1="367" y1="80" x2="392" y2="80"/>
+    <line x1="562" y1="80" x2="587" y2="80"/>
+    <line x1="732" y1="80" x2="757" y2="80"/>
+  </g>
+  <text x="450" y="140" text-anchor="middle" font-size="14" fill="#555">The simulator knows the true flip from the Pauli frame, so the last step is exact.</text>
+</svg>

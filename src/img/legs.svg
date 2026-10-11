@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 170" font-family="sans-serif" font-size="15" role="img" aria-label="Relay-BP legs: leg 0 with fixed memory, then legs with random memory each starting from the previous posteriors, then keep the lightest of up to eight converged answers">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#333"/></marker></defs>
+  <g fill="#f6f6f6" stroke="#333" stroke-width="1.5">
+    <rect x="5" y="40" width="165" height="80" rx="8"/>
+    <rect x="200" y="40" width="165" height="80" rx="8"/>
+    <rect x="395" y="40" width="165" height="80" rx="8"/>
+    <rect x="590" y="40" width="130" height="80" rx="8" fill="#e8f0fb"/>
+    <rect x="750" y="40" width="145" height="80" rx="8" fill="#e8f0fb"/>
+  </g>
+  <g fill="#111" text-anchor="middle">
+    <text x="87" y="66">Leg 0</text><text x="87" y="86" font-size="14">memory γ = 0.125</text><text x="87" y="104" font-size="14">60 iterations</text>
+    <text x="282" y="66">Leg 1</text><text x="282" y="86" font-size="14">random γ per qubit</text><text x="282" y="104" font-size="14">starts from leg 0</text>
+    <text x="477" y="66">Leg 2 … n</text><text x="477" y="86" font-size="14">same, from the last</text><text x="477" y="104" font-size="14">at most 80 legs</text>
+    <text x="655" y="66">Converged?</text><text x="655" y="86" font-size="14">keep it, up to 8</text><text x="655" y="104" font-size="14">or try the next</text>
+    <text x="822" y="66">Pick lightest</text><text x="822" y="86" font-size="14">smallest cost</text><text x="822" y="104" font-size="14">of those kept</text>
+  </g>
+  <g stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <line x1="172" y1="80" x2="197" y2="80"/><line x1="367" y1="80" x2="392" y2="80"/>
+    <line x1="562" y1="80" x2="587" y2="80"/><line x1="722" y1="80" x2="747" y2="80"/>
+  </g>
+  <text x="450" y="152" text-anchor="middle" font-size="14" fill="#555">Each leg is one memory-BP run. The page keeps the answer with the smallest log-likelihood cost, which is the most likely error.</text>
+</svg>

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why qubits need protecting · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html" aria-current="page"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 1 · The code · Chapter 1 · 5 min read</p>
+    <h1>Why qubits need protecting</h1>
+    <p class="lede">A qubit cannot be copied and cannot be read without changing it. After this chapter you can say why, name the three kinds of error a qubit suffers, and see what each one does to a state.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-38">Qubit</a></dt>
+        <dt><a href="appendix-glossary.html#t-44">Superposition</a></dt>
+        <dt><a href="appendix-glossary.html#t-3">Bit flip</a></dt>
+        <dt><a href="appendix-glossary.html#t-34">Phase flip</a></dt>
+        <dt><a href="appendix-glossary.html#t-31">Pauli error</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="two-obstacles">Two things you cannot do</h2>
+    <p>A classical bit is protected by copying it. Store the bit three times and a single flipped copy is outvoted. A <b>qubit</b> offers two obstacles to that plan.</p>
+    <p>First, a qubit can be in a <b>superposition</b>, written <span data-tex="\alpha|0\rangle+\beta|1\rangle"></span>, where the weights <span data-tex="\alpha"></span> and <span data-tex="\beta"></span> carry the information. No physical process copies an unknown state of that kind onto a second qubit. This is the no-cloning theorem. Repetition, the classical remedy, is not available.</p>
+    <p>Second, looking is not free. A measurement returns one bit, 0 or 1, and leaves the qubit in the state it reported. The weights are gone. So the obvious alternative, reading the qubit now and then to check it, destroys the very thing it protects.</p>
+    <p>Both obstacles point the same way. The information has to be spread over several qubits, and the questions asked about them have to concern the group, never one member. The next two chapters build exactly that.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Why it matters here</p>
+      <p>The simulator never reads a data qubit during error correction. It only asks parity questions through an ancilla, and it reads the data qubits once, at the very end of a shot.</p>
+    </div>
+
+    <h2 id="three-errors">Three kinds of error</h2>
+    <p>Whatever the physical cause, noise on one qubit can be described as a mixture of three operations, the <b>Pauli errors</b>. A <b>bit flip</b> is X, which swaps 0 and 1. A <b>phase flip</b> is Z, which leaves 0 alone and changes the sign of 1. Y is both at once, up to a factor that does not affect the outcomes here.</p>
+
+    <div class="sp-eq">
+      <div data-tex="X|0\rangle=|1\rangle,\qquad Z|+\rangle=|-\rangle,\qquad |\pm\rangle=\tfrac{1}{\sqrt2}\bigl(|0\rangle\pm|1\rangle\bigr)" data-display></div>
+      <span class="sp-eq__n">(1.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: X turns 0 into 1. Z turns the equal mix <span data-tex="|+\rangle"></span> into the equal mix with a minus sign, <span data-tex="|-\rangle"></span>. Measured in the 0/1 basis the two mixes look identical; the phase flip is invisible there.</p>
+
+    <figure class="sp-figure">
+      <table class="sp-table">
+        <thead><tr><th>Error</th><th>Name</th><th>On 0 and 1</th><th>On + and −</th></tr></thead>
+        <tbody>
+          <tr><td>X</td><td>bit flip</td><td>0 ↔ 1</td><td>+ stays +, − gets a sign</td></tr>
+          <tr><td>Z</td><td>phase flip</td><td>0 stays, 1 gets a sign</td><td>+ ↔ −</td></tr>
+          <tr><td>Y</td><td>both</td><td>0 ↔ 1, with a factor</td><td>+ ↔ −, with a factor</td></tr>
+        </tbody>
+      </table>
+      <figcaption><span class="sp-mono">Figure 1.1</span>X acts on the 0/1 labels and Z acts on the + and − labels, so a code has to watch for both.</figcaption>
+    </figure>
+
+    <p>This is why the same code appears twice in the simulator. Orange Z checks catch bit flips, blue X checks catch phase flips. Y is caught by both, because it contains both. Chapter 6 shows how often each kind occurs in each noise model.</p>
+
+    <h2 id="what-protection-means">What protection means</h2>
+    <p>A <b>logical qubit</b> is one qubit of information stored across several physical qubits so that a single error can be found and undone without reading the stored value. You pay in qubits and in extra measurements: the simulator uses seven data qubits for each logical qubit. In return, a single error no longer destroys the state. The price is only worth paying if the code corrects more errors than it adds, and showing that is the purpose of the whole simulator.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Careful</p>
+      <p>Correcting errors does not remove them. Each round of checks is itself a set of noisy operations. Chapters 4 to 6 follow how those errors appear in the data and how a decoder copes with them.</p>
+    </div>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Choose <b>Bit flip</b> noise at p = 0.02 and press Run, then change the noise to <b>Depolarizing</b> and run again. Look at the orange cells and the blue cells: bit flips light mostly orange checks, depolarizing noise lights both.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=bit_flip&amp;p=0.02&amp;rounds=3&amp;shots=96&amp;readout=Z&amp;decoder=relay&amp;view=raw&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:1fr 1fr">
+        <div><h3>Why can’t a qubit be protected by storing three copies?</h3><p>An unknown quantum state cannot be copied, and reading it to compare copies would collapse it.</p></div>
+        <div><h3>A qubit in state + suffers a bit flip. What does a 0/1 measurement notice?</h3><p>Nothing. X maps + to +, so the state is unchanged. Only a phase flip turns + into −.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>W. K. Wootters, W. H. Zurek (1982). A single quantum cannot be cloned. <i>Nature</i> 299, 802–803. <a href="https://doi.org/10.1038/299802a0">doi.org/10.1038/299802a0</a><br><span class="sp-src-use">Supports: the no-cloning theorem.</span></li>
+        <li>M. A. Nielsen, I. L. Chuang (2010). <i>Quantum Computation and Quantum Information</i>, 10th anniversary edition. Cambridge University Press. ISBN 978-1-107-00217-3. <a href="https://www.cambridge.org/9781107002173">www.cambridge.org/9781107002173</a><br><span class="sp-src-use">Supports: qubits, measurement and the Pauli operators X, Y, Z (chapters 1–2 of the book).</span></li>
+        <li>B. M. Terhal (2015). Quantum error correction for quantum memories. <i>Reviews of Modern Physics</i> 87, 307. <a href="https://doi.org/10.1103/RevModPhys.87.307">doi.org/10.1103/RevModPhys.87.307</a><br><span class="sp-src-use">Supports: an overview of why quantum memories need error correction.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="index.html"><span class="sp-eyebrow">Start</span><b>Documentation</b></a>
+      <a href="02-steane-code.html" class="next"><span class="sp-eyebrow">Next</span><b>The Steane code</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul>
+        <li><a href="#two-obstacles">Two things you cannot do</a></li>
+        <li><a href="#three-errors">Three kinds of error</a></li>
+        <li><a href="#what-protection-means">What protection means</a></li>
+        <li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/noise.py" data-src="engine/noise.py">engine/noise.py</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="02-steane-code.html">Ch. 2 · The Steane code</a></li><li><a href="06-noise-models.html">Ch. 6 · Noise models</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

@@ -30,8 +30,8 @@ def _backend_problem(backend):
     name = str(getattr(backend, "name", backend)).lower()
     ops = getattr(getattr(backend, "target", None), "operation_names", ())
     if "ionq" in name or "reset" not in ops:
-        return (f"'{name}' can't measure mid-circuit or reset qubits, which repeated QEC rounds need "
-                "(two Steane blocks + fresh ancillas would take 26 qubits). Pick the built-in Qiskit simulator.")
+        return (f"'{name}' is not supported: repeated QEC rounds need mid-circuit measurement and reset on one reused "
+                "ancilla, and only the built-in Qiskit simulator has been tested. Pick that one.")
     return None
 
 

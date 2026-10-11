@@ -12,7 +12,7 @@ import random
 CHANNELS = {
     "bit_flip": lambda p: {"data": ("X", p), "meas": p, "prior": (p, p)},
     "depolarizing": lambda p: {"data": ("DEP1", p), "meas": p, "prior": (2 * p / 3, p)},
-    # SI1000 (Gidney, Newman, McEwen 2021). Idles are booked once per round as if the
+    # SI1000 (Gidney, Newman, Fowler, Broughton 2021). Idles are booked once per round as if the
     # 12 checks ran in parallel; reusing one ancilla is only a simulator qubit-budget trick.
     # shortcut: prior is a rough phenomenological fit (hooks not modelled), use a circuit-level DEM for exact priors.
     "si1000": lambda p: {"data": ("DEP1", 2 * p + p / 10), "cx": ("DEP2", p), "1q": ("DEP1", p / 10),

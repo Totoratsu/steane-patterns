@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detection events · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html" aria-current="page"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 2 · Time and noise · Chapter 5 · 5 min read</p>
+    <h1>Detection events: what changed since last round</h1>
+    <p class="lede">A raw check says what is wrong now; a detection says what is new. You will be able to tell a data error from a measurement error by the shape its detections leave in the grid.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-10">Detection</a></dt>
+        <dt><a href="appendix-glossary.html#t-7">Data error</a></dt>
+        <dt><a href="appendix-glossary.html#t-21">Measurement error</a></dt>
+        <dt><a href="appendix-glossary.html#t-39">Raw view</a></dt>
+        <dt><a href="appendix-glossary.html#t-11">Detections view</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="what-changed">From answers to changes</h2>
+    <p>Chapter 4 ended with a problem. A bit flip on a data qubit fires its checks in the round after it arrives, and they stay lit in every later round, because nothing repairs the flip. Reading the raw grid, you see a column of lit cells but not when the error happened, and a second error elsewhere in the column is hard to separate from the first.</p>
+    <p>The fix is to ask a different question: not “is this check lit?” but “did this check change?”. A check that read 0 in round 1 and 1 in round 2 has changed once, at the moment the error arrived. Write <span data-tex="s_t"></span> for the syndrome of round <span data-tex="t"></span>, the three answers of one block and one Pauli type. The detections are the syndromes compared with their predecessors:</p>
+
+    <div class="sp-eq">
+      <div data-tex="d_t = s_t \oplus s_{t-1}, \qquad s_0 = 0, \qquad s_{R+1} = H\,x \bmod 2" data-display></div>
+      <span class="sp-eq__n">(5.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: <span data-tex="d_t"></span> is this round’s syndrome XOR the last one. The first round is compared with an all-zero syndrome, and the last with the syndrome recomputed from the data readout, <span data-tex="H\,x"></span>. With <span data-tex="R"></span> rounds that gives <span data-tex="R+1"></span> rows of detections.</p>
+
+    <h2 id="two-shapes">Two errors, two shapes</h2>
+    <p>A <b>data error</b> changes the checks once and then stays. In Raw it is a lit cell that repeats down the column; in Detections it is one lit cell, in the round it arrived. One long-lived error costs one event instead of one per round, which is why a decoder reads detections.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage" style="gap:var(--space-5)">
+        <div><p class="sp-eyebrow">Raw</p><div id="f1raw"></div></div>
+        <div><p class="sp-eyebrow">Detections</p><div id="f1det"></div></div>
+      </div>
+      <div style="margin-top:var(--space-2)"><ul class="sp-legend" aria-label="Legend"><li><span class="sp-sw is-z"></span>Z check fired</li><li><span class="sp-sw is-x"></span>X check fired</li></ul></div>
+      <figcaption><span class="sp-mono">Figure 5.1</span>A data error is a lit stripe in Raw and a single lit cell per check in Detections. Qubit 4 flipped before round 2; the last row, labelled data, is the syndrome recomputed from the readout.</figcaption>
+    </figure>
+
+    <p>A <b>measurement error</b> is different. The data are intact, so the check reads correctly in the next round. The wrong answer is a lone lit cell in Raw. In Detections it appears twice, because the answer changes when the error arrives and changes back one round later. Two lit cells in consecutive rows in the same column are the signature.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage" style="gap:var(--space-5)">
+        <div><p class="sp-eyebrow">Raw</p><div id="f2raw"></div></div>
+        <div><p class="sp-eyebrow">Detections</p><div id="f2det"></div></div>
+      </div>
+      <div style="margin-top:var(--space-2)"><ul class="sp-legend" aria-label="Legend"><li><span class="sp-sw is-z"></span>Z check fired</li><li><span class="sp-sw is-x"></span>X check fired</li></ul></div>
+      <figcaption><span class="sp-mono">Figure 5.2</span>A measurement error is one lit cell in Raw and two lit cells in consecutive rows of Detections. Check Z2 was misread in round 2.</figcaption>
+    </figure>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Why it matters here</p>
+      <p>A decoder sees only the detections. It never learns which qubit flipped; it has to infer the errors from the lit cells.</p>
+    </div>
+
+    <div id="live"></div>
+
+    <h2 id="heat">Many shots at once</h2>
+    <p>Real shots mix these shapes, and the detections of separate errors add mod 2, so two events that light the same cell cancel. The heat map counts, for every check and round, how often a detection lit across all shots. In this run, block A lights in about 5 to 18% of shots per cell, and later rounds are busier because errors accumulate.</p>
+    
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage"><div id="f3heat"></div></div>
+      <div style="margin-top:var(--space-2)"><ul class="sp-legend" aria-label="Legend"><li><span class="sp-sw is-z"></span>Z check fired</li><li><span class="sp-sw is-x"></span>X check fired</li></ul></div>
+      <figcaption><span class="sp-mono">Figure 5.3</span>Detection rate per check and round for block A, 96 shots, depolarizing noise at p = 0.03, seed 1, shaded as the simulator shades it (rate times 2.5, capped at 1).</figcaption>
+    </figure>
+
+    <p>The decoder uses the same objects. <code>dem</code> in <code>engine/decoders.py</code> builds one detector per row of Equation 5.1 and one column per data error and per measurement error. A measurement error column touches two detectors in consecutive rows, as in Figure 5.2. Chapter 7 uses that matrix.</p>
+
+        <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Choose Depolarizing noise, set p to 0.03 and press Run with 256 shots, then open the Heat map view. Look for darker cells: they mark the checks that fire most often. Then switch to Detections and step through single shots, looking for pairs of lit cells in consecutive rows.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=depolarizing&amp;p=0.03&amp;rounds=3&amp;shots=256&amp;readout=Z&amp;decoder=relay&amp;view=det&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:1fr 1fr 1fr">
+        <div><h3>A check is lit in rounds 2 and 3 of the Raw view and nowhere else. How many detections does that make?</h3><p>One, in round 2. In round 3 the answer did not change, and the data row compares round 3 with the readout, which still agrees.</p></div>
+        <div><h3>What is the Detections signature of a measurement error in the last round?</h3><p>One detection in the last round and one in the data row, since the recomputed syndrome disagrees with the misread one.</p></div>
+        <div><h3>Why compare the last round with the data readout?</h3><p>Without it, a data error that arrives after the last round would never be seen. The readout carries it and the comparison turns it into a detection.</p></div>
+      </div>
+    </details>
+
+        <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>E. Dennis, A. Kitaev, A. Landahl, J. Preskill (2002). Topological quantum memory. <i>Journal of Mathematical Physics</i> 43, 4452. <a href="https://doi.org/10.1063/1.1499754">doi.org/10.1063/1.1499754</a><br><span class="sp-src-use">Supports: comparing syndromes from consecutive rounds and the shapes of data and measurement errors.</span></li>
+        <li>A. G. Fowler, M. Mariantoni, J. M. Martinis, A. N. Cleland (2012). Surface codes: Towards practical large-scale quantum computation. <i>Physical Review A</i> 86, 032324. <a href="https://doi.org/10.1103/PhysRevA.86.032324">doi.org/10.1103/PhysRevA.86.032324</a><br><span class="sp-src-use">Supports: syndrome changes between rounds.</span></li>
+        <li>Stim documentation. Detector error model file format. <a href="https://github.com/quantumlib/Stim/blob/main/doc/file_format_dem_detector_error_model.md">github.com/quantumlib/Stim/blob/main/doc/file_format_dem_detector_error_model.md</a><br><span class="sp-src-use">Supports: detectors and the detector error model as Stim defines them.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="04-rounds-grid.html"><span class="sp-eyebrow">Previous</span><b>Rounds, ancillas, the grid</b></a>
+      <a href="06-noise-models.html" class="next"><span class="sp-eyebrow">Next</span><b>Noise models</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul><li><a href="#what-changed">From answers to changes</a></li><li><a href="#two-shapes">Two errors, two shapes</a></li><li><a href="#heat">Many shots at once</a></li><li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/decoders.py" data-src="engine/decoders.py">engine/decoders.py</a></li><li><a class="mono" href="../../engine/bridge.py" data-src="engine/bridge.py">engine/bridge.py</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="04-rounds-grid.html">Ch. 4 · Rounds, ancillas, the grid</a></li><li><a href="06-noise-models.html">Ch. 6 · Noise models</a></li><li><a href="07-decoder-task.html">Ch. 7 · What a decoder must do</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  var HEAT = [[0.1, 0.07, 0.1, 0.06, 0.08, 0.05], [0.09, 0.11, 0.1, 0.16, 0.12, 0.11], [0.18, 0.17, 0.12, 0.08, 0.12, 0.14]];
+  window.addEventListener('DOMContentLoaded', function () {
+    var G = window.SteanePatterns, R = 3;
+    var Hm = [[0,0,0,1,1,1,1],[0,1,1,0,0,1,1],[1,0,1,0,1,0,1]];
+    var six = function (v) { return v.concat([0,0,0]); };
+    // Rows: R raw rounds plus a final row recomputed from the data readout (the extra row is a docs device).
+    function scenario(type, t, x) {
+      var raw = [], r, i, col = type === 'data' ? Hm.map(function (h) { return h[x]; }) : [0,0,0];
+      for (r = 0; r < R; r++) raw.push(type === 'data' && t <= r ? col.slice() : [0,0,0]);
+      if (type === 'meas') raw[t][x] ^= 1;
+      raw.push(type === 'data' ? col.slice() : [0,0,0]);
+      var det = raw.map(function (row, k) { return row.map(function (v, c) { return v ^ (k ? raw[k - 1][c] : 0); }); });
+      return { raw: raw.map(six), det: det.map(six), final: raw[R] };
+    }
+    var rows4 = function (g) { return g.replace('>r4<', '>data<'); };
+    var grid = function (rows, label, view) { return rows4(G.CheckGrid({ rows: rows, rowCount: R + 1, view: view || 'raw', label: label })); };
+    var a = scenario('data', 1, 4), b = scenario('meas', 1, 1);
+    document.getElementById('f1raw').innerHTML = grid(a.raw, 'Raw: Z1 and Z3 lit in round 2, round 3 and the data row');
+    document.getElementById('f1det').innerHTML = grid(a.det, 'Detections: Z1 and Z3 lit in round 2 only');
+    document.getElementById('f2raw').innerHTML = grid(b.raw, 'Raw: Z2 lit in round 2 only');
+    document.getElementById('f2det').innerHTML = grid(b.det, 'Detections: Z2 lit in rounds 2 and 3');
+    var heat = HEAT.map(function (row) { return row.map(function (f) { return Math.min(1, f * 2.5); }); });
+    document.getElementById('f3heat').innerHTML = G.CheckGrid({ rows: heat, rowCount: R, view: 'heat', label: 'Detection rate per check and round, block A, 96 shots' });
+
+    // Live figure
+    var live = document.getElementById('live'), st = { type: 'none', t: 1, x: 4 };
+    live.innerHTML = '<div class="sp-live"><div class="sp-live__bar"><p class="sp-eyebrow">Live figure</p></div>' +
+      '<div data-ctl></div><div data-out class="sp-figure__stage" style="margin-top:var(--space-4);gap:var(--space-5)"></div>' +
+      '<div style="margin-top:var(--space-3)">' + document.querySelector('.sp-legend').outerHTML + '</div>' +
+      '<p class="sp-caption sp-live__hint" role="status" aria-live="polite" data-hint></p></div>';
+    var ctl = live.querySelector('[data-ctl]'), out = live.querySelector('[data-out]'), hintEl = live.querySelector('[data-hint]');
+    function seg(label, key, opts) {
+      return '<div style="margin-bottom:var(--space-3)"><p class="sp-caption" id="lbl-' + key + '">' + label + '</p><div class="sp-seg" role="group" aria-labelledby="lbl-' + key + '">' +
+        opts.map(function (o) { return '<button type="button" data-k="' + key + '=' + o[0] + '" aria-pressed="' + (String(st[key]) === String(o[0])) + '"' + (o[2] ? ' aria-label="' + o[2] + '"' : '') + '>' + o[1] + '</button>'; }).join('') + '</div></div>';
+    }
+    function hint() {
+      if (st.type === 'none') return 'Nothing is injected, so both views are dark. Choose an error type.';
+      var s = scenario(st.type, st.t, st.x), names = [];
+      s.final.forEach(function (v, c) { if (v) names.push('Z' + (c + 1)); });
+      if (st.type === 'data') {
+        var list = names.join(' and '), n = st.t + 1;
+        if (st.t === R) return 'The flip comes after the last round, so rounds 1 to ' + R + ' stay quiet in both views. Only the data row lights, and the same cells (' + list + ') light in Detections.';
+        return 'Qubit ' + st.x + ' flips before round ' + n + ' and fires ' + list + '. Raw: lit from round ' + n + ' down to the data row. Detections: lit only in round ' + n + ', once for each fired check.';
+      }
+      var nxt = st.t + 1 < R ? 'round ' + (st.t + 2) : 'the data row';
+      return 'Check Z' + (st.x + 1) + ' is misread in round ' + (st.t + 1) + '. Raw: one lit cell. Detections: two lit cells, round ' + (st.t + 1) + ' and ' + nxt + ', because the true answer returns.';
+    }
+    function render(focus) {
+      var types = [['none','None'],['data','Data error'],['meas','Measurement error']];
+      var rounds = (st.type === 'meas' ? [[0,'1'],[1,'2'],[2,'3']] : [[0,'1'],[1,'2'],[2,'3'],[3,'data','before the data readout']]);
+      var tg = st.type === 'meas' ? [0,1,2].map(function (c) { return [c, 'Z' + (c + 1)]; }) : [0,1,2,3,4,5,6].map(function (q) { return [q, String(q)]; });
+      ctl.innerHTML = seg('Error type', 'type', types) +
+        (st.type === 'none' ? '' : seg(st.type === 'meas' ? 'Round in which the check is misread' : 'Round before which the flip arrives', 't', rounds) +
+         seg(st.type === 'meas' ? 'Check' : 'Qubit', 'x', tg));
+      var s = scenario(st.type === 'none' ? 'meas' : st.type, st.t, st.x);
+      if (st.type === 'none') s = { raw: s.raw.map(function () { return [0,0,0,0,0,0]; }), det: s.raw.map(function () { return [0,0,0,0,0,0]; }), final: [0,0,0] };
+      var data = [0,0,0,0,0,0,0]; if (st.type === 'data') data[st.x] = 1;
+      out.innerHTML = '<div><p class="sp-eyebrow">Raw</p>' + grid(s.raw, 'Raw view of the injected error') + '</div>' +
+        '<div><p class="sp-eyebrow">Detections</p>' + grid(s.det, 'Detections view of the injected error') + '</div>' +
+        '<div style="width:170px">' + G.SteaneTriangle({ name: 'A', faces: s.final.map(function (v) { return { z: v }; }), data: data, caption: 'data readout' }) + '</div>';
+      hintEl.textContent = hint();
+      if (focus) { var f = live.querySelector('[data-k="' + focus + '"]'); if (f) f.focus(); }
+    }
+    live.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-k]'); if (!b) return;
+      var kv = b.getAttribute('data-k').split('='); st[kv[0]] = kv[0] === 'type' ? kv[1] : +kv[1];
+      if (st.type === 'meas') { st.t = Math.min(st.t, R - 1); st.x = Math.min(st.x, 2); }
+      render(b.getAttribute('data-k'));
+    });
+    render();
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

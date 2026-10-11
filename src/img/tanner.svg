@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 322" font-family="sans-serif" font-size="15" role="img" aria-label="Tanner graph of the Steane code: three check nodes on top, seven data qubit nodes below, an edge when a check touches a qubit">
+  <g stroke="#888" stroke-width="1.5">
+    <line x1="150" y1="60" x2="300" y2="240"/><line x1="150" y1="60" x2="375" y2="240"/>
+    <line x1="150" y1="60" x2="450" y2="240"/><line x1="150" y1="60" x2="525" y2="240"/>
+    <line x1="300" y1="60" x2="150" y2="240"/><line x1="300" y1="60" x2="225" y2="240"/>
+    <line x1="300" y1="60" x2="450" y2="240"/><line x1="300" y1="60" x2="525" y2="240"/>
+    <line x1="450" y1="60" x2="75" y2="240"/><line x1="450" y1="60" x2="225" y2="240"/>
+    <line x1="450" y1="60" x2="375" y2="240"/><line x1="450" y1="60" x2="525" y2="240"/>
+  </g>
+  <g fill="#e8f0fb" stroke="#333" stroke-width="1.5">
+    <rect x="110" y="30" width="80" height="60" rx="6"/><rect x="260" y="30" width="80" height="60" rx="6"/><rect x="410" y="30" width="80" height="60" rx="6"/>
+  </g>
+  <g fill="#fff" stroke="#333" stroke-width="1.5">
+    <circle cx="75" cy="240" r="18"/><circle cx="150" cy="240" r="18"/><circle cx="225" cy="240" r="18"/><circle cx="300" cy="240" r="18"/>
+    <circle cx="375" cy="240" r="18"/><circle cx="450" cy="240" r="18"/><circle cx="525" cy="240" r="18"/>
+  </g>
+  <g fill="#111" text-anchor="middle">
+    <text x="150" y="58">check 1</text><text x="300" y="58">check 2</text><text x="450" y="58">check 3</text>
+    <text x="75" y="245">q0</text><text x="150" y="245">q1</text><text x="225" y="245">q2</text><text x="300" y="245">q3</text>
+    <text x="375" y="245">q4</text><text x="450" y="245">q5</text><text x="525" y="245">q6</text>
+    <text x="300" y="292" font-size="14" fill="#555">Each check touches four qubits, and any two checks share two.</text>
+    <text x="300" y="312" font-size="14" fill="#555">The graph has many short loops, which is what traps BP.</text>
+  </g>
+</svg>

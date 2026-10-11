@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glossary · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html" aria-current="page"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html" ><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Appendix A</p>
+    <h1>Glossary</h1>
+    <p class="lede">Every key term from the chapters, in alphabetical order, with the chapter that defines it.</p>
+    <div class="sp-terms"><dl>
+<dt id="t-0">95% interval</dt><dd>The range around a measured rate that would hold the underlying rate in about 95 of 100 repeats. <a href="10-logical-errors.html">Ch. 10</a></dd>
+<dt id="t-1">Ancilla</dt><dd>A helper qubit that is measured in place of the data qubits, so the check answer is learned without reading the data. <a href="04-rounds-grid.html">Ch. 4</a></dd>
+<dt id="t-2">Backend</dt><dd>The machine or simulator that runs the circuits. <a href="12-limits.html">Ch. 12</a></dd>
+<dt id="t-3">Bit flip</dt><dd>An X error: 0 becomes 1 and 1 becomes 0. <a href="01-why-protect.html">Ch. 1</a></dd>
+<dt id="t-4">Check</dt><dd>A parity question about four data qubits, answered with one bit. <a href="02-steane-code.html">Ch. 2</a></dd>
+<dt id="t-5">Cluster</dt><dd>The clashing sound of a shot where at least one logical qubit was lost. <a href="11-listening.html">Ch. 11</a></dd>
+<dt id="t-6">CSS code</dt><dd>A code whose Z checks and X checks come from classical matrices; here, the same one. <a href="02-steane-code.html">Ch. 2</a></dd>
+<dt id="t-7">Data error</dt><dd>A flip on a data qubit. It stays until something undoes it. <a href="05-detection-events.html">Ch. 5</a></dd>
+<dt id="t-8">Data qubit</dt><dd>One of the seven physical qubits that together hold a logical qubit. <a href="02-steane-code.html">Ch. 2</a></dd>
+<dt id="t-9">Decoder</dt><dd>A program that reads the detections and returns a guess of which errors happened. <a href="07-decoder-task.html">Ch. 7</a></dd>
+<dt id="t-10">Detection</dt><dd>A check whose answer changed since the previous round. <a href="05-detection-events.html">Ch. 5</a></dd>
+<dt id="t-11">Detections view</dt><dd>The grid after each cell is compared with the same check in the round before. <a href="05-detection-events.html">Ch. 5</a></dd>
+<dt id="t-12">Detector error model</dt><dd>The matrix that lists, for every possible single fault, which detections it lights. <a href="07-decoder-task.html">Ch. 7</a></dd>
+<dt id="t-13">Distance</dt><dd>The smallest number of errors that can change the logical qubit without any check noticing. <a href="02-steane-code.html">Ch. 2</a></dd>
+<dt id="t-14">Grid</dt><dd>The space-time picture of a shot: one column per check, one row per round. <a href="04-rounds-grid.html">Ch. 4</a></dd>
+<dt id="t-15">Hook error</dt><dd>An ancilla error mid-check that spreads through the CX gates to several data qubits. <a href="06-noise-models.html">Ch. 6</a></dd>
+<dt id="t-16">Leg</dt><dd>One run of memory BP; the next leg starts from the posteriors the previous one ended with. <a href="09-relay-bp.html">Ch. 9</a></dd>
+<dt id="t-17">Log-likelihood ratio</dt><dd>The number ln((1−p)/p) that the decoder uses as the cost of blaming a fault. <a href="07-decoder-task.html">Ch. 7</a></dd>
+<dt id="t-18">Logical error</dt><dd>A shot where a decoder's predicted flip differs from the true flip in some block. <a href="10-logical-errors.html">Ch. 10</a></dd>
+<dt id="t-19">Logical qubit</dt><dd>The one qubit of information stored across the seven data qubits. <a href="02-steane-code.html">Ch. 2</a></dd>
+<dt id="t-20">Major chord</dt><dd>The sound of a shot where both logical qubits were recovered. <a href="11-listening.html">Ch. 11</a></dd>
+<dt id="t-21">Measurement error</dt><dd>A check read out wrongly. The qubits are fine; only that one answer is a lie. <a href="05-detection-events.html">Ch. 5</a></dd>
+<dt id="t-22">Memory BP</dt><dd>Belief propagation in which each qubit blends its prior with its previous total belief. <a href="09-relay-bp.html">Ch. 9</a></dd>
+<dt id="t-23">Memory strength</dt><dd>The weight γ of that blend: 0 is plain BP, larger values trust the past more, negative values push against it. <a href="09-relay-bp.html">Ch. 9</a></dd>
+<dt id="t-24">Message</dt><dd>A number a node sends along a line: a check tells a qubit how strongly to believe it is flipped, or not flipped. <a href="08-belief-propagation.html">Ch. 8</a></dd>
+<dt id="t-25">Mid-circuit measurement</dt><dd>Measuring a qubit while the circuit is still running, then using it again. <a href="12-limits.html">Ch. 12</a></dd>
+<dt id="t-26">Min-sum</dt><dd>The update rule used here: a check sends the sign of the other opinions and the smallest of their strengths. <a href="08-belief-propagation.html">Ch. 8</a></dd>
+<dt id="t-27">Noise channel</dt><dd>A rule that says where in the circuit a random Pauli error may be inserted, and with what probability. <a href="06-noise-models.html">Ch. 6</a></dd>
+<dt id="t-28">Note</dt><dd>One tone for one fired check, with a pitch from its column and a waveform from its kind. <a href="11-listening.html">Ch. 11</a></dd>
+<dt id="t-29">Optimal-decoder limit</dt><dd>The logical error rate of the best possible decoder for the model, computed exactly. <a href="09-relay-bp.html">Ch. 9</a></dd>
+<dt id="t-30">Parity check</dt><dd>A question of the form “is the number of 1s among these qubits even or odd?” <a href="03-syndromes.html">Ch. 3</a></dd>
+<dt id="t-31">Pauli error</dt><dd>X, Z or Y; the three basic ways a single qubit can go wrong. <a href="01-why-protect.html">Ch. 1</a></dd>
+<dt id="t-32">Pauli frame</dt><dd>The record of which qubits carry an X or Z error, tracked through every gate. <a href="10-logical-errors.html">Ch. 10</a></dd>
+<dt id="t-33">Pentatonic scale</dt><dd>A scale with no semitone steps, so any combination of its notes avoids the harshest clashes. <a href="11-listening.html">Ch. 11</a></dd>
+<dt id="t-34">Phase flip</dt><dd>A Z error: the sign of the 1 part of the state changes. <a href="01-why-protect.html">Ch. 1</a></dd>
+<dt id="t-35">Physical error probability</dt><dd>The number p that sets the strength of a channel; what it multiplies depends on the channel. <a href="06-noise-models.html">Ch. 6</a></dd>
+<dt id="t-36">Posterior</dt><dd>A qubit’s total belief after the messages, as a log-likelihood ratio; negative means “flipped”. <a href="08-belief-propagation.html">Ch. 8</a></dd>
+<dt id="t-37">Prior</dt><dd>The pair (data, meas) of error probabilities the decoder assumes, per Pauli type. <a href="06-noise-models.html">Ch. 6</a></dd>
+<dt id="t-38">Qubit</dt><dd>A two-level quantum system whose state is a mix of 0 and 1. <a href="01-why-protect.html">Ch. 1</a></dd>
+<dt id="t-39">Raw view</dt><dd>The grid of check answers exactly as measured. <a href="05-detection-events.html">Ch. 5</a></dd>
+<dt id="t-40">Round</dt><dd>One pass over all the checks of both blocks: 12 checks. <a href="04-rounds-grid.html">Ch. 4</a></dd>
+<dt id="t-41">Short cycle</dt><dd>A loop of only a few lines in the Tanner graph, along which a message returns to the node it came from. <a href="08-belief-propagation.html">Ch. 8</a></dd>
+<dt id="t-42">Shot</dt><dd>One noisy run of the whole circuit, with its own randomly drawn errors. <a href="04-rounds-grid.html">Ch. 4</a></dd>
+<dt id="t-43">Statevector</dt><dd>The full list of amplitudes of all qubits, whose size doubles with each qubit. <a href="12-limits.html">Ch. 12</a></dd>
+<dt id="t-44">Superposition</dt><dd>A state that is a weighted sum of 0 and 1 rather than one of them. <a href="01-why-protect.html">Ch. 1</a></dd>
+<dt id="t-45">Syndrome</dt><dd>The answers of all the checks in one round, written as a string of bits. <a href="03-syndromes.html">Ch. 3</a></dd>
+<dt id="t-46">Tanner graph</dt><dd>A drawing of a check matrix: one node per check, one node per qubit, and a line wherever the matrix has a 1. <a href="08-belief-propagation.html">Ch. 8</a></dd>
+    </dl></div>
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>M. A. Nielsen, I. L. Chuang (2010). <i>Quantum Computation and Quantum Information</i>, 10th anniversary edition. Cambridge University Press. ISBN 978-1-107-00217-3. <a href="https://www.cambridge.org/9781107002173">www.cambridge.org/9781107002173</a><br><span class="sp-src-use">Supports: definitions of the quantum terms.</span></li>
+        <li>B. M. Terhal (2015). Quantum error correction for quantum memories. <i>Reviews of Modern Physics</i> 87, 307. <a href="https://doi.org/10.1103/RevModPhys.87.307">doi.org/10.1103/RevModPhys.87.307</a><br><span class="sp-src-use">Supports: error correction terms for quantum memories.</span></li>
+        <li>T. Müller, T. Alexander, M. E. Beverland, M. Bühler, B. R. Johnson, T. Maurer, D. Vandeth (2025). Improved belief propagation is sufficient for real-time decoding of quantum memory. arXiv:2506.01779. <a href="https://arxiv.org/abs/2506.01779">arxiv.org/abs/2506.01779</a><br><span class="sp-src-use">Supports: Relay-BP terms.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="12-limits.html"><span class="sp-eyebrow">Previous</span><b>Limits and what next</b></a>
+      <a href="appendix-run.html" class="next"><span class="sp-eyebrow">Next</span><b>Run it yourself</b></a>
+    </nav>
+  </article>
+
+  
+</div>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

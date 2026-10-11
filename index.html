@@ -4,35 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Steane Patterns</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="src/main.css">
+<link rel="icon" type="image/png" sizes="32x32" href="src/img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="src/img/steane-icon-192.png">
+<link rel="preload" href="src/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="src/fonts/InstrumentSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="src/css/tokens.css">
+<link rel="stylesheet" href="src/css/main.css">
 </head>
 <body>
 <header>
-  <h1>Steane Patterns</h1>
+  <p class="eyebrow">Quantum error correction · Steane [[7,1,3]]</p>
+  <h1><img class="mark" src="src/img/steane-icon-192.png" alt="" width="56" height="56">Steane Patterns</h1>
   <p>Two logical qubits, each protected by a Steane [[7,1,3]] code, go through repeated rounds of error correction. Noise lights up the parity checks, every lit check plays a note, and two decoders (plain BP and Relay-BP) try to undo the damage.</p>
 </header>
 
 <section class="guide" aria-label="How to read this">
-<details open>
+<details id="guideBox" open>
 <summary>How to read this</summary>
 <div class="cols">
 <div>
-<h3>The qubits (15 in total)</h3>
+<h3>The qubits, 15 in total</h3>
 <p>Each logical qubit is a <b>triangle</b>: its 7 vertices are <b>data qubits</b> (q0–q6 for logical A, q7–q13 for B), which hold the information. The 3 <b>faces</b> are not qubits: each is a <b>parity check</b> on the 4 vertices around it. One extra <b>ancilla qubit (q14)</b> measures those checks: it is entangled with a face, read out, reset, and reused, 12 times per round.</p>
-<h3>One round = one grid row</h3>
+<h3>One round is one grid row</h3>
 <p>Every face is checked twice per round. The <b>Z check</b> (orange) catches bit flips (X errors), and the <b>X check</b> (blue) catches phase flips (Z errors). A cell is the bit the ancilla read: with no noise every check reads 0 and the grid stays dark. While a round plays, the triangle faces mirror it (orange fill = Z check fired, blue outline = X check fired).</p>
 </div>
 <div>
 <h3>The end of the shot</h3>
-<p>Only now are the data qubits measured (filled vertex = read 1). The faces then show the parities computed from those bits. The logical value is the parity of all 7 bits. A decoder looks at the whole pattern and guesses which qubits went wrong (<b>pink rings</b>: on vertices for data errors, on grid cells for faulty readouts). The <b>✓/✗</b> is exact: the simulator tracks every injected error, so we know the truth.</p>
+<p>Only now are the data qubits measured (filled vertex = read 1). The faces then show the parities computed from those bits. The logical value is the parity of all 7 bits. A decoder looks at the whole pattern and guesses which qubits went wrong (<b>pink rings</b>: on vertices for data errors, on grid cells for faulty readouts). The verdict (<b>corrected</b> or <b>logical error</b>) is exact: the simulator tracks every injected error, so we know the truth.</p>
 <h3>Views</h3>
 <ul><li><b>Raw bits</b>: what the ancilla measured.</li><li><b>Detections</b>: only checks that changed since the previous round, which is where new errors appeared. This is what decoders actually read.</li><li><b>Heat map</b>: how often each check fires over all shots.</li></ul>
 </div>
 <div>
 <h3>Logical error rate</h3>
-<p><b>No decoding</b> reads the raw parity. <b>BP</b> is plain belief propagation, which gets lost on the Steane code's short loops and often does not converge. <b>Relay-BP</b> (IBM, 2025) chains BP runs with randomized memory and keeps the best answer. <b>Limit</b> is the exact error rate of the best decoder that reads one error type at a time (maximum-likelihood, per Pauli type). Joint decoders that also use the other type can beat it under depolarizing noise, where one Y error links both types. (Not shown for SI1000, whose circuit-level noise the decoders only approximate). Relay-BP gets within a few percent of it (it picks the single most likely error, while the optimum adds up all equivalent ones). BP stays far above it.</p>
+<p><b>No decoding</b> reads the raw parity. <b>BP</b> is plain belief propagation, which gets lost on the Steane code's short loops and often does not converge. <b>Relay-BP</b> (Müller et al., 2025) chains BP runs with randomized memory and keeps the best answer. <b>Limit</b> is the exact error rate of the best decoder that reads one error type at a time (maximum-likelihood, per Pauli type). Joint decoders that also use the other type can beat it under depolarizing noise, where one Y error links both types. (Not shown for SI1000, whose circuit-level noise the decoders only approximate). Relay-BP gets within a few percent of it (it picks the single most likely error, while the optimum adds up all equivalent ones). BP stays far above it.</p>
 <h3>Things to try</h3>
 <ul><li>Bit flip: only Z checks (orange) light up. Depolarizing: both colors.</li><li>Depolarizing at p ≈ 0.03 with 256 shots: BP sits well above the limit, and Relay-BP sits close to it.</li><li>SI1000 is realistic circuit noise from superconducting hardware: gates, readout and idling all fail.</li><li>Music: block A plays low, block B high, Z checks triangle wave, X checks sine. A major chord means corrected, a dissonant one means a logical error.</li></ul>
 </div>
@@ -80,14 +84,19 @@
     </div>
     <canvas id="grid" aria-label="Grid of ancilla readouts (rows are rounds, columns are parity checks) above two Steane-code triangles (vertices are data qubits, faces are parity checks)"></canvas>
     <div class="toolbar">
-      <button id="prev" aria-label="Previous shot">◀</button>
-      <button id="play">Pause</button>
-      <button id="next" aria-label="Next shot">▶</button>
-      <span id="shotInfo" class="mono"></span>
-      <label class="inline">Tempo <input id="tempo" type="range" min="80" max="700" value="260"></label>
+      <button id="prev" class="icon" aria-label="Previous shot"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M10.5 2v10L3.5 7z"/></svg></button>
+      <button id="play" style="min-width:88px"></button>
+      <button id="next" class="icon" aria-label="Next shot"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2v10l7-5z"/></svg></button>
+      <span id="shotInfo" class="mono" role="status"></span>
+      <label class="inline">Tempo <input id="tempo" aria-label="Tempo" type="range" min="80" max="700" value="420"></label>
       <label class="inline"><input id="sound" type="checkbox" checked> Sound</label>
     </div>
-    <p class="legend"><span><span class="sw z"></span>Z check (sees X errors)</span> <span><span class="sw x"></span>X check (sees Z errors)</span> <span><span class="sw d"></span>data qubit read 1</span> <span><span class="sw m"></span>decoder blames this</span></p>
+    <p class="legend"><span><span class="sw z"></span>Z check (sees X errors)</span> <span><span class="sw x"></span>X check (sees Z errors)</span> <span><span class="sw d"></span>data qubit read 1</span> <span><span class="sw m"></span>decoder blames this</span> <a href="src/docs/03-syndromes.html">What are Z and X checks?</a></p>
+    <details class="soundmap">
+      <summary>Sound map: which check plays which note</summary>
+      <div id="soundmap"></div>
+      <p class="note">Pitch follows the column on a pentatonic scale (0, 2, 4, 7, 9, 12 semitones). Z checks are triangle waves, X checks are sine waves. A row of n lit checks plays each note at 0.18 ÷ √n. A major chord means corrected; a dissonant cluster means a logical error.</p>
+    </details>
   </section>
 
   <section class="panel stats" aria-label="Results">
@@ -98,6 +107,25 @@
     <p class="note">Ground truth comes from tracking the Pauli frame of the injected noise, so every shot is judged exactly. The decoders get a phenomenological model; for SI1000 that model is approximate (hook errors are left out), just like a real decoder with an imperfect noise model.</p>
   </section>
 </main>
+
+<div class="docs-wrap">
+  <section class="panel docs-entry" aria-labelledby="docs-h">
+    <div>
+      <p class="eyebrow">Go deeper</p>
+      <h2 id="docs-h">How do these simulations work?</h2>
+      <p>Twelve short chapters, from a single bit flip to Relay-BP, with figures you can touch and setups you can run.</p>
+    </div>
+    <a class="btn lg" href="src/docs/">Read the documentation <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    <ul class="docs-topics">
+      <li class="eyebrow">Start anywhere</li>
+      <li><a href="src/docs/03-syndromes.html"><span class="n">03</span>What is a syndrome?</a></li>
+      <li><a href="src/docs/05-detection-events.html"><span class="n">05</span>Why a check that changes is a detection</a></li>
+      <li><a href="src/docs/08-belief-propagation.html"><span class="n">08</span>Why plain BP gets lost on this code</a></li>
+      <li><a href="src/docs/11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+    </ul>
+  </section>
+</div>
+<footer class="foot"><p>© 2026 Nixon Lizcano · Built for the Qollab × IonQ Global Quantum Hackathon · independent, not affiliated with Qollab or IonQ · MIT licence · <a href="https://github.com/Totoratsu/steane-patterns">Source on GitHub</a></p></footer>
 <script type="module" src="main.js"></script>
 </body>
 </html>

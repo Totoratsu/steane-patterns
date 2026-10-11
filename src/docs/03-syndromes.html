@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Syndromes · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html" aria-current="page"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 1 · The code · Chapter 3 · 6 min read</p>
+    <h1>Syndromes: finding an error without looking at the data</h1>
+    <p class="lede">Measuring a qubit destroys what it holds. A syndrome is the way around that: ask a question about several qubits together, never about one, and the answer points at the error.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-30">Parity check</a></dt>
+        <dt><a href="appendix-glossary.html#t-45">Syndrome</a></dt>
+        <dt><a href="appendix-glossary.html#t-3">Bit flip</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="three-questions">Three questions about seven qubits</h2>
+    <p>In Steane Patterns each logical qubit is a triangle. Its seven vertices are the <b>data qubits</b>. Its three faces are <b>parity checks</b>, one on the four vertices around each face. The Z checks (orange) ask about bit flips, the X checks (blue) about phase flips. This chapter follows bit flips; phase flips work the same way with the colours swapped.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage">
+        <div class="sp-tri sp-tri--200" id="f1a"></div>
+        <div class="sp-tri sp-tri--200" id="f1b"></div>
+      </div>
+      <figcaption><span class="sp-mono">Figure 3.1</span>A flipped qubit lights every face it touches. Qubit 4 touches faces 1 and 3, so exactly those two Z checks fire.</figcaption>
+    </figure>
+
+    <h2 id="names-the-qubit">The syndrome names the qubit</h2>
+    <p>Write the three check results as three bits, face 1 first. A flip on qubit 4 gives <code>1 0 1</code>. Read that as a binary number: 101 is 5, so the culprit is qubit 5 − 1 = 4, counting from 0. The same holds for all seven qubits. Each has its own pattern and no two share one.</p>
+
+    <div class="sp-eq">
+      <div data-tex="s = H\,e \bmod 2,\qquad H=\begin{pmatrix}0&0&0&1&1&1&1\\0&1&1&0&0&1&1\\1&0&1&0&1&0&1\end{pmatrix}" data-display></div>
+      <span class="sp-eq__n">(3.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: take the error pattern <span data-tex="e"></span> (one bit per qubit, 1 where a qubit is flipped), multiply by the check matrix <span data-tex="H"></span> and keep each result modulo 2. Column <span data-tex="j"></span> of <span data-tex="H"></span> is the number <span data-tex="j+1"></span> written in binary, which is why the syndrome can be read as a number.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Intuition</p>
+      <p>Three yes-or-no answers give <span data-tex="2^3 = 8"></span> outcomes: seven for “this qubit” and one for “nobody”.</p>
+    </div>
+
+    <div id="live"></div>
+
+    <h2 id="where-it-stops">Where it stops working</h2>
+    <p>Flip two qubits and the pattern looks exactly like one flip on a third qubit, so the decoder repairs the wrong one. The three flips together form a logical operator, and that is a <b>logical error</b>. A distance-3 code corrects any single flip and nothing more. Larger codes and repeated rounds, the subject of the next chapters, are how that limit is pushed back.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Choose <b>Bit flip</b> noise, set p to 0.02 and press Run. Every orange cell is a face whose check fired.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=bit_flip&amp;p=0.02&amp;rounds=3&amp;shots=96&amp;readout=Z&amp;decoder=relay&amp;view=raw&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:1fr 1fr">
+        <div><h3>Which faces light up for a flip on qubit 2?</h3><p>Faces 2 and 3. The pattern <code>0 1 1</code> is 3 in binary, and 3 − 1 = 2.</p></div>
+        <div><h3>Why can’t the decoder tell two flips from one?</h3><p>Two columns of <span data-tex="H"></span> added together always give a third column, so the syndrome matches a single flip elsewhere.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>A. M. Steane (1996). Simple quantum error-correcting codes. <i>Physical Review A</i> 54, 4741. <a href="https://arxiv.org/abs/quant-ph/9605021">arxiv.org/abs/quant-ph/9605021</a><br><span class="sp-src-use">Supports: syndrome measurement for the seven-qubit code.</span></li>
+        <li>M. A. Nielsen, I. L. Chuang (2010). <i>Quantum Computation and Quantum Information</i>, 10th anniversary edition. Cambridge University Press. ISBN 978-1-107-00217-3. <a href="https://www.cambridge.org/9781107002173">www.cambridge.org/9781107002173</a><br><span class="sp-src-use">Supports: error correction through syndromes (chapter 10 of the book).</span></li>
+        <li>D. Gottesman (1997). Stabilizer codes and quantum error correction. Ph.D. thesis, Caltech. arXiv:quant-ph/9705052. <a href="https://arxiv.org/abs/quant-ph/9705052">arxiv.org/abs/quant-ph/9705052</a><br><span class="sp-src-use">Supports: stabilizer codes and syndromes.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="02-steane-code.html"><span class="sp-eyebrow">Previous</span><b>The Steane code</b></a>
+      <a href="04-rounds-grid.html" class="next"><span class="sp-eyebrow">Next</span><b>Rounds, ancillas, the grid</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul>
+        <li><a href="#three-questions">Three questions</a></li>
+        <li><a href="#names-the-qubit">The syndrome names the qubit</a></li>
+        <li><a href="#where-it-stops">Where it stops working</a></li>
+        <li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/steane.py" data-src="engine/steane.py">engine/steane.py</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="05-detection-events.html">Ch. 5 · Detection events</a></li><li><a href="08-belief-propagation.html">Ch. 8 · Belief propagation</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    var G = window.SteanePatterns;
+    document.getElementById('f1a').innerHTML = G.SteaneTriangle({ name: 'A', caption: 'no flip · no check fires' });
+    document.getElementById('f1b').innerHTML = G.SteaneTriangle({ name: 'A', faces: [{z:1},{z:0},{z:1}], data: [0,0,0,0,1,0,0], blame: [4], caption: 'qubit 4 flipped · 1 0 1' });
+    G.LiveFigure(document.getElementById('live'));
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

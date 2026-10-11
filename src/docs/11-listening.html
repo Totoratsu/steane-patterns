@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listening to a shot · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html" aria-current="page"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 4 · Reading results · Chapter 11 · 6 min read</p>
+    <h1>Listening to a shot</h1>
+    <p class="lede">Every lit check plays a note and every shot ends in a verdict you can hear. You will be able to say which check made which sound, and what a cluster at the end means.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-28">Note</a></dt><dt><a href="appendix-glossary.html#t-33">Pentatonic scale</a></dt><dt><a href="appendix-glossary.html#t-20">Major chord</a></dt><dt><a href="appendix-glossary.html#t-5">Cluster</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="one-check-one-note">One check, one note</h2>
+    <p>During playback each round becomes a chord. The notes are the checks that are lit in the row being shown: in the Raw view the checks that fired, in the Detections view the checks that changed. A <b>note</b> here is one tone from the browser's Web Audio oscillator, started by the page when the row appears and fading out within 0.4 seconds.</p>
+    <p>The pitch comes from the check's column. The six checks of a block, Z1 to Z3 and X1 to X3, are mapped onto the six degrees of a <b>pentatonic scale</b>, a scale of five distinct pitch classes, plus the octave. Block A uses 220 Hz as its base note and block B 440 Hz, one octave higher. The offsets are 0, 2, 4, 7, 9 and 12 semitones.</p>
+
+    <div class="sp-eq">
+      <div data-tex="f = f_0\,2^{k/12}" data-display></div>
+      <span class="sp-eq__n">(11.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: <span data-tex="f"></span> is the frequency in hertz, <span data-tex="f_0"></span> the base note of the block (220 Hz for block A, 440 Hz for block B) and <span data-tex="k"></span> the offset in semitones for the check. Twelve semitones double the frequency; so block B sits exactly one octave above block A.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage"><style>.sm{border-collapse:collapse;font:400 14px/22px var(--font-sans);width:100%;max-width:520px}.sm th,.sm td{padding:4px 12px;border-bottom:1px solid var(--hairline);text-align:right}.sm th:first-child,.sm td:nth-child(3){text-align:left}.sm thead th{font-weight:600;color:var(--ink)}.sm td{font-family:var(--font-mono);color:var(--ink-muted)}.sm tbody th{font-weight:600}.aud{display:grid;gap:var(--space-3);width:100%}.aud__row{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center}.aud .sp-btn[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}.aud__hint{margin:0;font:400 14px/22px var(--font-sans);color:var(--ink-muted);min-height:22px}.sm-wrap{width:100%;overflow-x:auto}</style><div class="sm-wrap"><table class="sm"><caption class="sp-eyebrow" style="text-align:left;padding-bottom:var(--space-2)">Check to note</caption><thead><tr><th scope="col">Check</th><th scope="col">Semitones</th><th scope="col">Wave</th><th scope="col">Block A, Hz</th><th scope="col">Block B, Hz</th></tr></thead><tbody><tr><th scope="row">Z1</th><td>0</td><td>triangle</td><td>220.0</td><td>440.0</td></tr><tr><th scope="row">Z2</th><td>2</td><td>triangle</td><td>246.9</td><td>493.9</td></tr><tr><th scope="row">Z3</th><td>4</td><td>triangle</td><td>277.2</td><td>554.4</td></tr><tr><th scope="row">X1</th><td>7</td><td>sine</td><td>329.6</td><td>659.3</td></tr><tr><th scope="row">X2</th><td>9</td><td>sine</td><td>370.0</td><td>740.0</td></tr><tr><th scope="row">X3</th><td>12</td><td>sine</td><td>440.0</td><td>880.0</td></tr></tbody></table></div></div>
+      <figcaption><span class="sp-mono">Figure 11.1</span>Every check has one fixed pitch and one fixed waveform. Z checks are triangle waves, X checks are sine waves, so you can hear which kind fired.</figcaption>
+    </figure>
+
+    <h2 id="why-pentatonic">Why a pentatonic scale, and why quieter rows</h2>
+    <p>Up to twelve checks can fire at once, so every combination must sound acceptable. In the notes of <code>src/js/audio.js</code>, no two notes, within a block or across the two, are 1 or 11 semitones apart. Dense rounds sound busy but not harsh, and the sound thickens as <span data-tex="p"></span> grows.</p>
+    <p>A row of twelve notes would be much louder than a row of one. The page therefore gives every note in a row the same volume, scaled down by the square root of how many notes there are.</p>
+
+    <div class="sp-eq">
+      <div data-tex="v = \frac{0.18}{\sqrt{\max(1,\,n)}}" data-display></div>
+      <span class="sp-eq__n">(11.2)</span>
+    </div>
+    <p class="sp-eq-words">In words: <span data-tex="v"></span> is the gain of each note and <span data-tex="n"></span> the number of fired checks in the row. One note plays at 0.18; four notes at 0.09 each; all twelve at about 0.052 each. Independent tones add in energy, not in amplitude, so this keeps the overall loudness of a row roughly constant.</p>
+
+    <div class="sp-figure" id="audition">
+      <div class="sp-figure__stage"><div class="aud">
+        <p class="sp-eyebrow">Audition · nothing plays until you press a play button</p>
+        <div class="aud__row" role="group" aria-label="Block A checks"><span class="sp-eyebrow" style="min-width:56px">Block A</span><button type="button" class="sp-btn" data-col="0" aria-pressed="false">Z1</button><button type="button" class="sp-btn" data-col="1" aria-pressed="false">Z2</button><button type="button" class="sp-btn" data-col="2" aria-pressed="false">Z3</button><button type="button" class="sp-btn" data-col="3" aria-pressed="false">X1</button><button type="button" class="sp-btn" data-col="4" aria-pressed="false">X2</button><button type="button" class="sp-btn" data-col="5" aria-pressed="false">X3</button></div><div class="aud__row" role="group" aria-label="Block B checks"><span class="sp-eyebrow" style="min-width:56px">Block B</span><button type="button" class="sp-btn" data-col="6" aria-pressed="false">Z1</button><button type="button" class="sp-btn" data-col="7" aria-pressed="false">Z2</button><button type="button" class="sp-btn" data-col="8" aria-pressed="false">Z3</button><button type="button" class="sp-btn" data-col="9" aria-pressed="false">X1</button><button type="button" class="sp-btn" data-col="10" aria-pressed="false">X2</button><button type="button" class="sp-btn" data-col="11" aria-pressed="false">X3</button></div>
+        <div class="aud__row">
+          <button type="button" class="sp-btn sp-btn--primary" id="play-row">Play the row</button>
+          <button type="button" class="sp-btn" id="play-ok">Play the chord</button>
+          <button type="button" class="sp-btn" id="play-bad">Play the cluster</button>
+          <button type="button" class="sp-btn" id="clear-row">Clear</button>
+        </div>
+        <p class="aud__hint" id="aud-hint" role="status" aria-live="polite">Pick fired checks, as if they were orange or blue cells in one round, then play the row.</p>
+      </div></div>
+    </div>
+    <script type="module">
+      import { Synth } from '../js/audio.js';
+      const synth = new Synth(), hint = document.getElementById('aud-hint');
+      const on = () => [...document.querySelectorAll('#audition [data-col][aria-pressed="true"]')].map((b) => +b.dataset.col);
+      const say = (t) => { hint.textContent = t; };
+      for (const b of document.querySelectorAll('#audition [data-col]')) {
+        b.addEventListener('click', () => {
+          b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true');
+          const n = on().length;
+          say(n ? n + ' check' + (n > 1 ? 's' : '') + ' fired. Each note gets volume 0.18 / sqrt(' + n + ') = ' + (0.18 / Math.max(1, Math.sqrt(n))).toFixed(3) + '.' : 'No check fired: a row like this is silent.');
+        });
+      }
+      document.getElementById('play-row').addEventListener('click', () => {
+        const cols = on(); synth.wake(); synth.row(cols);
+        say(cols.length ? 'Played ' + cols.length + ' note' + (cols.length > 1 ? 's' : '') + ' together.' : 'Nothing to play: no check is marked as fired.');
+      });
+      document.getElementById('play-ok').addEventListener('click', () => { synth.wake(); synth.chord(true); say('Major chord: both logical qubits were recovered.'); });
+      document.getElementById('play-bad').addEventListener('click', () => { synth.wake(); synth.chord(false); say('Cluster of sawtooth notes: at least one logical qubit was lost.'); });
+      document.getElementById('clear-row').addEventListener('click', () => {
+        for (const b of document.querySelectorAll('#audition [data-col]')) b.setAttribute('aria-pressed', 'false');
+        say('Cleared.');
+      });
+    </script>
+
+    <h2 id="chord-cluster">The chord and the cluster</h2>
+    <p>After the last row the page plays the verdict for the shot, using the decoder chosen in the panel (or no decoding). If both logical qubits are right, it plays a <b>major chord</b>: four sine tones at 262 Hz and 0, 4, 7 and 12 semitones above it, at volume 0.08 and for 0.9 seconds. If at least one is wrong, it plays a <b>cluster</b>: four sawtooth tones at offsets 0, 1, 6 and 11, at volume 0.04. Those intervals, a semitone, a tritone and a major seventh, are chosen to clash, and the sawtooth wave is bright and rough. The two verdicts differ in interval, waveform and brightness, not in loudness alone.</p>
+
+    <h2 id="silence">What is deliberately silent</h2>
+    <p>A check that did not fire makes no sound, so a quiet round is silence, not a low hum. The decoder's pink rings are silent: sound reports what the hardware showed, not what the decoder believes. The noise events themselves are silent too. Only the lit checks and the final verdict can be heard, and nothing plays until you press Play in the simulator or one of the buttons above. The Sound checkbox in the simulator mutes it again.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Open the simulator, press Play and listen to a few shots at p = 0.03. Notice which rounds are silent, how a pair of detections in consecutive rounds sounds as two repeats of one pitch, and what you hear at the end of a shot whose decoder failed.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=depolarizing&amp;p=0.03&amp;rounds=3&amp;shots=96&amp;readout=Z&amp;decoder=relay&amp;view=det&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:repeat(3,1fr)">
+        <div><h3>Which two checks play 440 Hz?</h3><p>X3 of block A (12 semitones above 220 Hz) and Z1 of block B (0 semitones above 440 Hz).</p></div><div><h3>Why does each note get quieter when more checks fire?</h3><p>The volume is 0.18 divided by the square root of the number of notes, so a dense row does not become much louder than a sparse one.</p></div><div><h3>What does the cluster tell you?</h3><p>At least one of the two logical qubits was wrong after decoding with the selected decoder.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>W3C Audio Working Group (2021). Web Audio API, W3C Recommendation, 17 June 2021. <a href="https://www.w3.org/TR/2021/REC-webaudio-20210617/">www.w3.org/TR/2021/REC-webaudio-20210617/</a><br><span class="sp-src-use">Supports: oscillators, waveform types and gain in the browser.</span></li>
+        <li>Wikipedia. Pentatonic scale (a general reference, not a primary source). <a href="https://en.wikipedia.org/wiki/Pentatonic_scale">en.wikipedia.org/wiki/Pentatonic_scale</a><br><span class="sp-src-use">Supports: the pentatonic scale.</span></li>
+        <li>Wikipedia. Equal temperament (a general reference, not a primary source). <a href="https://en.wikipedia.org/wiki/Equal_temperament">en.wikipedia.org/wiki/Equal_temperament</a><br><span class="sp-src-use">Supports: the semitone ratio of 2^(1/12) behind the frequencies.</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="10-logical-errors.html"><span class="sp-eyebrow">Previous</span><b>Logical errors and ground truth</b></a>
+      <a href="12-limits.html" class="next"><span class="sp-eyebrow">Next</span><b>Limits and what next</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul><li><a href="#one-check-one-note">One check, one note</a></li><li><a href="#why-pentatonic">Why pentatonic</a></li><li><a href="#audition">Audition</a></li><li><a href="#chord-cluster">The chord and the cluster</a></li><li><a href="#silence">What is silent</a></li><li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../src/js/audio.js" data-src="src/js/audio.js">src/js/audio.js</a></li><li><a class="mono" href="../../src/js/ui.js" data-src="src/js/ui.js">src/js/ui.js</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="03-syndromes.html">Ch. 3 · Syndromes</a></li><li><a href="05-detection-events.html">Ch. 5 · Detection events</a></li><li><a href="10-logical-errors.html">Ch. 10 · Logical errors</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>

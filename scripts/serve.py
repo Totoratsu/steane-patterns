@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT))  # so `engine` imports when run as scripts/serve.p
 
 from engine import bridge  # noqa: E402
 
-SHIM = b"""import { start } from './src/ui.js';
+SHIM = b"""import { start } from './src/js/ui.js';
 start({ run: (opts) => fetch('/run', { method: 'POST', body: JSON.stringify(opts) }).then((r) => r.json()) });
 """
 

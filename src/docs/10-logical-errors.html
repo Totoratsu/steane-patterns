@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logical errors and ground truth · Steane Patterns documentation</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="../img/steane-icon-192.png">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/docs.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="../js/steane-patterns.js"></script>
+</head>
+<body>
+<a class="sp-skip" href="#main">Skip to content</a>
+<header class="sp-doc-top"><div class="sp-doc-top__in">
+  <a class="sp-wordmark" href="index.html"><img class="sp-wordmark__icon" src="../img/steane-icon-192.png" alt="" width="28" height="28">Steane Patterns <span class="sp-eyebrow">Documentation</span></a>
+  <a class="sp-btn" href="../../index.html">Open the simulator <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+</div></header>
+
+<div class="sp-doc">
+  <nav class="sp-doc__nav" aria-label="Chapters">
+    <details class="sp-nav-details" open><summary>Contents</summary>
+    <p class="sp-eyebrow">Part 1 · The code</p>
+    <ol>
+      <li><a href="01-why-protect.html"><span class="n">01</span>Why qubits need protecting</a></li>
+      <li><a href="02-steane-code.html"><span class="n">02</span>The Steane code</a></li>
+      <li><a href="03-syndromes.html"><span class="n">03</span>Syndromes</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 2 · Time and noise</p>
+    <ol>
+      <li><a href="04-rounds-grid.html"><span class="n">04</span>Rounds, ancillas, the grid</a></li>
+      <li><a href="05-detection-events.html"><span class="n">05</span>Detection events</a></li>
+      <li><a href="06-noise-models.html"><span class="n">06</span>Noise models</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 3 · Decoding</p>
+    <ol>
+      <li><a href="07-decoder-task.html"><span class="n">07</span>What a decoder must do</a></li>
+      <li><a href="08-belief-propagation.html"><span class="n">08</span>Belief propagation</a></li>
+      <li><a href="09-relay-bp.html"><span class="n">09</span>Relay-BP</a></li>
+    </ol>
+    <p class="sp-eyebrow">Part 4 · Reading results</p>
+    <ol>
+      <li><a href="10-logical-errors.html" aria-current="page"><span class="n">10</span>Logical errors and ground truth</a></li>
+      <li><a href="11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="12-limits.html"><span class="n">12</span>Limits and what next</a></li>
+    </ol>
+    <p class="sp-eyebrow">Appendix</p>
+    <ol>
+      <li><a href="appendix-glossary.html"><span class="n">A</span>Glossary</a></li>
+      <li><a href="appendix-run.html"><span class="n">B</span>Run it yourself</a></li>
+      <li><a href="appendix-references.html"><span class="n">C</span>References</a></li>
+    </ol>
+  </details>
+  </nav>
+
+  <article class="sp-prose" id="main" tabindex="-1">
+    <p class="sp-eyebrow">Part 4 · Reading results · Chapter 10 · 7 min read</p>
+    <h1>Logical errors and ground truth</h1>
+    <p class="lede">Every shot is scored against the exact truth, not against a decoder. You will be able to read the error rate, its 95% interval, the outcome histogram and the optimal-decoder tick.</p>
+
+    <div class="sp-terms">
+      <p class="sp-eyebrow">Key terms</p>
+      <dl>
+        <dt><a href="appendix-glossary.html#t-32">Pauli frame</a></dt><dt><a href="appendix-glossary.html#t-18">Logical error</a></dt><dt><a href="appendix-glossary.html#t-0">95% interval</a></dt><dt><a href="appendix-glossary.html#t-29">Optimal-decoder limit</a></dt>
+      </dl>
+    </div>
+
+    <h2 id="frame">The simulator knows the truth</h2>
+    <p>To score a decoder you need the true answer, which cannot come from the decoder. Steane Patterns gets it by bookkeeping: while building each circuit it inserts every noise event as an explicit Pauli gate, and it follows those Paulis through the gates after them. The record of which qubits carry an X part and which carry a Z part is the <b>Pauli frame</b>. This is exact and needs no measurement.</p>
+    <figure class="sp-figure">
+      <div class="sp-figure__stage sp-diagram"><img src="../img/pauli-frame.svg" alt="An X error on the control of a CNOT spreads to the target, so the frame shows X on both qubits after the gate"></div>
+      <figcaption><span class="sp-mono">Figure 10.1</span>How the frame moves through a CNOT: an X on the control is copied to the target. The simulator keeps this record for every error it injects.</figcaption>
+    </figure>
+
+    <p>The frame turns into a verdict through the Steane code's logical operators. A product of Z on all seven qubits is a logical Z, so an odd number of X parts on one block flips that block's readout. In the code this is one line per block: sum the X parts over its seven qubits, modulo 2. That bit is the <b>true flip</b>. When the readout basis is X, the frame swaps its X and Z parts first, as the Hadamard gates before readout do.</p>
+
+    <div class="sp-eq">
+      <div data-tex="f_k=\sum_{q\in\text{block }k} x_q \bmod 2" data-display></div>
+      <span class="sp-eq__n">(10.1)</span>
+    </div>
+    <p class="sp-eq-words">In words: <span data-tex="x_q"></span> is 1 when qubit <span data-tex="q"></span> carries an X part in the frame. If the sum over the seven qubits of block <span data-tex="k"></span> is odd, the true logical value of that block was flipped.</p>
+
+    <p>A decoder is judged against the true flip. Its output <span data-tex="e"></span> is a guess of the errors, and its predicted flip is the parity of the data errors in <span data-tex="e"></span>. A shot is a <b>logical error</b> for a decoder when, in at least one of the two blocks, the predicted flip differs from the true flip. Blaming the wrong qubits can still be right: only the parity matters, because errors that differ by a stabilizer act the same on the logical qubit.</p>
+
+    <h2 id="interval">One rate, and how far to trust it</h2>
+    <p>The <b>logical error rate</b> of a decoder is the fraction of shots that are logical errors. The panel in the simulator shows it for four cases: no decoding (the true flip alone), BP, Relay-BP and the limit described below. Over <span data-tex="n"></span> shots the measured rate is a sample, and another seed gives another value. The page draws the usual normal-approximation <b>95% interval</b>: the range that would hold the underlying rate in about 95 of 100 repeated experiments.</p>
+
+    <div class="sp-eq">
+      <div data-tex="\pm\,1.96\sqrt{\hat P_L\,(1-\hat P_L)/n}" data-display></div>
+      <span class="sp-eq__n">(10.2)</span>
+    </div>
+    <p class="sp-eq-words">In words: <span data-tex="\hat P_L"></span> is the measured logical error rate and <span data-tex="n"></span> the number of shots. The interval shrinks as the square root of the shots: four times as many shots halve it. The symbol <span data-tex="p"></span> stays reserved for the physical error probability.</p>
+
+    <p>With 256 shots, the maximum, and a measured rate of 7.4% (19 failing shots), the half-width is 3.2 percentage points. The README advises 192 to 256 shots for this reason. The page also reports how often each decoder failed to <b>converge</b>, meaning it returned a guess that does not even reproduce the observed detections.</p>
+
+    <h2 id="histogram">The outcome histogram</h2>
+    <p>The ideal state of a Bell pair has only two outcomes for the pair of logical qubits, 00 and 11, each with probability one half. The simulator computes this ideal exactly. The histogram is the readout of both logical qubits: each bit is the parity of a block's data readout, corrected by the decoder's predicted flip.</p>
+
+    <figure class="sp-figure">
+      <div class="sp-figure__stage"><div style="width:100%;max-width:480px"><svg viewBox="0 0 420 192" width="100%" style="height:auto" role="img" aria-label="Histogram of the two logical readouts over 256 shots. Without decoding the counts are 64, 52, 54 and 86 for 00, 01, 10 and 11. After Relay-BP they are 118, 8, 10 and 120: almost all shots land on the two ideal outcomes 00 and 11."><style>.hr{fill:var(--ink-muted);opacity:.55}.hd{fill:var(--ink)}text{font:400 11px var(--font-sans);fill:var(--ink-muted)}.lb{font:600 13px var(--font-mono);fill:var(--ink)}</style><line x1="30" y1="150.5" x2="410" y2="150.5" stroke="var(--hairline)"/><rect class="hr" x="40" y="86.0" width="30" height="64.0"/><text x="55" y="81.0" text-anchor="middle">64</text><rect class="hd" x="74" y="32.0" width="30" height="118.0"/><text x="89" y="27.0" text-anchor="middle">118</text><text x="72" y="168" text-anchor="middle" class="lb">00</text><text x="72" y="184" text-anchor="middle">ideal outcome</text><rect class="hr" x="135" y="98.0" width="30" height="52.0"/><text x="150" y="93.0" text-anchor="middle">52</text><rect class="hd" x="169" y="142.0" width="30" height="8.0"/><text x="184" y="137.0" text-anchor="middle">8</text><text x="167" y="168" text-anchor="middle" class="lb">01</text><text x="167" y="184" text-anchor="middle">never ideal</text><rect class="hr" x="230" y="96.0" width="30" height="54.0"/><text x="245" y="91.0" text-anchor="middle">54</text><rect class="hd" x="264" y="140.0" width="30" height="10.0"/><text x="279" y="135.0" text-anchor="middle">10</text><text x="262" y="168" text-anchor="middle" class="lb">10</text><text x="262" y="184" text-anchor="middle">never ideal</text><rect class="hr" x="325" y="64.0" width="30" height="86.0"/><text x="340" y="59.0" text-anchor="middle">86</text><rect class="hd" x="359" y="30.0" width="30" height="120.0"/><text x="374" y="25.0" text-anchor="middle">120</text><text x="357" y="168" text-anchor="middle" class="lb">11</text><text x="357" y="184" text-anchor="middle">ideal outcome</text></svg><p style="margin:var(--space-2) 0 0;font:400 12px/17px var(--font-sans);color:var(--ink-muted)">Left bar of each pair, lighter: no decoding. Right bar, dark: Relay-BP. Depolarizing p = 0.03 · 3 rounds · 256 shots · Bell pair · seed 1.</p></div></div>
+      <figcaption><span class="sp-mono">Figure 10.2</span>Without decoding, noise spreads shots over all four outcomes. After Relay-BP the shots sit on 00 and 11 again; the 18 in 01 and 10 are the logical errors that remain.</figcaption>
+    </figure>
+
+    <p>A shot on 01 or 10 is a failure by definition, because the ideal state never produces them.</p>
+
+    <h2 id="limit">The limit, and why it is not always shown</h2>
+    <p>The black tick on each bar is the <b>optimal-decoder limit</b>, the logical error rate of the exact maximum-likelihood decoder for the detector error model of Chapter 7. For one block and one Pauli type it is computed exactly, not sampled: a dynamic program over the error columns gives the probability of every pair of syndrome and logical class, and the best decoder picks the likelier class for each syndrome.</p>
+
+    <div class="sp-eq">
+      <div data-tex="q=\sum_{s}\min\bigl(P(s,0),\,P(s,1)\bigr),\qquad P_{\text{limit}}=1-(1-q)^2" data-display></div>
+      <span class="sp-eq__n">(10.3)</span>
+    </div>
+    <p class="sp-eq-words">In words: for each syndrome <span data-tex="s"></span>, the optimal decoder loses the probability of the less likely logical class, <span data-tex="P(s,c)"></span> being the probability of syndrome <span data-tex="s"></span> together with logical class <span data-tex="c"></span>. The two independent blocks combine as shown.</p>
+
+    <p>The limit is optimal for decoders that treat each Pauli type separately. Under depolarizing noise a Y error is an X and a Z at once, which this model leaves out, so a joint decoder could beat it. A bar can also sit below the tick by chance: in the run behind Figure 10.2, Relay-BP measured 7.4% against a limit of 10.5%, a gap inside the interval of Equation 10.2.</p>
+    <p>For SI1000 no limit is shown. The decoders use rough priors there and leave out hook errors, so a limit computed from those priors would describe a different, noisier model, not this circuit. An exact limit would need a circuit-level error model.</p>
+
+    <div class="sp-callout">
+      <p class="sp-eyebrow">Try it in the simulator</p>
+      <p>Run depolarizing noise at p = 0.03 with 256 shots. In the right panel, compare each bar with its 95% whisker, find the black tick, and check that the Relay-BP histogram is concentrated on 00 and 11. Then lower the shots to 48 and see how much wider the whiskers get.</p>
+      <a class="sp-btn" href="../../index.html?circuit=bell&amp;noise=depolarizing&amp;p=0.03&amp;rounds=3&amp;shots=256&amp;readout=Z&amp;decoder=relay&amp;view=det&amp;run=1">Open the simulator with this setup <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    </div>
+
+    <details class="sp-guide" id="check">
+      <summary>Check yourself</summary>
+      <div class="sp-guide__cols" style="grid-template-columns:repeat(3,1fr)">
+        <div><h3>Why can the simulator score a decoder without trusting it?</h3><p>It follows every injected Pauli through the circuit, so the true flip of each block is known exactly before any decoder runs.</p></div><div><h3>How many shots halve the 95% interval?</h3><p>Four times as many, because the half-width goes as <span data-tex="1/\sqrt{n}"></span>.</p></div><div><h3>Why is the limit hidden for SI1000?</h3><p>The decoder priors are only a rough fit there, so the limit would describe another model, not the circuit.</p></div>
+      </div>
+    </details>
+
+    <section class="sp-sources" id="sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>C. Gidney (2021). Stim: a fast stabilizer circuit simulator. <i>Quantum</i> 5, 497. <a href="https://doi.org/10.22331/q-2021-07-06-497">doi.org/10.22331/q-2021-07-06-497</a><br><span class="sp-src-use">Supports: Pauli frames as a way to track errors through a circuit (Stim samples with them).</span></li>
+        <li>S. Aaronson, D. Gottesman (2004). Improved simulation of stabilizer circuits. <i>Physical Review A</i> 70, 052328. <a href="https://doi.org/10.1103/PhysRevA.70.052328">doi.org/10.1103/PhysRevA.70.052328</a><br><span class="sp-src-use">Supports: propagating Pauli errors through Clifford circuits.</span></li>
+        <li>L. D. Brown, T. T. Cai, A. DasGupta (2001). Interval estimation for a binomial proportion. <i>Statistical Science</i> 16, 101–133. <a href="https://doi.org/10.1214/ss/1009213286">doi.org/10.1214/ss/1009213286</a><br><span class="sp-src-use">Supports: confidence intervals for a proportion, including the normal-approximation interval used here.</span></li>
+        <li>M. A. Nielsen, I. L. Chuang (2010). <i>Quantum Computation and Quantum Information</i>, 10th anniversary edition. Cambridge University Press. ISBN 978-1-107-00217-3. <a href="https://www.cambridge.org/9781107002173">www.cambridge.org/9781107002173</a><br><span class="sp-src-use">Supports: logical operators of stabilizer codes (chapter 10 of the book).</span></li>
+      </ol>
+    </section>
+    <nav class="sp-pager" aria-label="Previous and next">
+      <a href="09-relay-bp.html"><span class="sp-eyebrow">Previous</span><b>Relay-BP</b></a>
+      <a href="11-listening.html" class="next"><span class="sp-eyebrow">Next</span><b>Listening to a shot</b></a>
+    </nav>
+  </article>
+
+  <aside class="sp-doc__aside" aria-label="On this page">
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">On this page</p>
+      <ul><li><a href="#frame">The simulator knows the truth</a></li><li><a href="#interval">One rate, and how far to trust it</a></li><li><a href="#histogram">The outcome histogram</a></li><li><a href="#limit">The limit</a></li><li><a href="#check">Check yourself</a></li>
+        <li><a href="#sources">Sources</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Source</p>
+      <ul><li><a class="mono" href="../../engine/circuit.py" data-src="engine/circuit.py">engine/circuit.py</a></li><li><a class="mono" href="../../engine/bridge.py" data-src="engine/bridge.py">engine/bridge.py</a></li><li><a class="mono" href="../../engine/decoders.py" data-src="engine/decoders.py">engine/decoders.py</a></li><li><a class="mono" href="../../src/js/ui.js" data-src="src/js/ui.js">src/js/ui.js</a></li></ul>
+    </div>
+    <div>
+      <p class="sp-eyebrow" style="margin-bottom:var(--space-2)">Related</p>
+      <ul><li><a href="07-decoder-task.html">Ch. 7 · What a decoder must do</a></li><li><a href="09-relay-bp.html">Ch. 9 · Relay-BP</a></li><li><a href="12-limits.html">Ch. 12 · Limits</a></li></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-tex]').forEach(function (el) {
+      var tex = el.getAttribute('data-tex');
+      try { window.katex.render(tex, el, { output: 'htmlAndMathml', displayMode: el.hasAttribute('data-display'), throwOnError: false }); }
+      catch (e) { el.textContent = tex; }
+    });
+  });
+</script>
+<footer class="sp-foot">© 2026 Nixon Lizcano · MIT licence · Independent project, not affiliated with Qollab or IonQ</footer>
+</body></html>
