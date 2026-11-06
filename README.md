@@ -1,24 +1,22 @@
-<p align="center">
-  <img src="src/img/steane-banner.png" alt="Steane Patterns: watch error correction, hear it too" width="100%">
-</p>
+**This effort is supported by Qollab & IonQ.**
 
 **Watch quantum error correction work, and hear it.** Two logical qubits, each protected by a Steane [[7,1,3]] code, go through repeated rounds of error correction. Every parity-check readout is a cell in a grid (one row per round, one column per check), and each logical qubit is drawn as a triangle: 7 corners are data qubits, 3 faces are parity checks. Noise lights checks up, every lit check plays a note, and two decoders (plain belief propagation, BP, and **Relay-BP**) try to undo the damage.
 
-Built for the Qollab × IonQ Global Quantum Hackathon, Oct 9–11 2026. An independent project: not affiliated with or endorsed by Qollab or IonQ. All product names belong to their owners.
+Built for the Qollab × IonQ Global Quantum Hackathon, Oct 9–11 2026. An independent project. All product names belong to their owners.
 
 ## Use it
 
 1. On Qollab, press **Run** with the **built-in Qiskit simulator** (IonQ is not supported, see *Limitations*).
 2. Pick a logical circuit, a noise channel, the strength `p`, the rounds and the readout basis, then press **Run** in the page.
-3. The grid plays one shot at a time. Read the **How to read this** box at the top of the page, or go to the **[documentation](src/docs/index.html)** (12 short chapters with diagrams and something to try in each).
+3. The grid plays one shot at a time. Read the **How to read this** box at the top of the page, or go to the **[documentation](https://totoratsu.github.io/steane-patterns/src/docs/)** (12 short chapters with diagrams and something to try in each).
 
 Turn `p` up, listen to the music get denser, then watch BP fail before Relay-BP does. Use 192–256 shots to see the gap through the noise.
 
 ## How it works
 
-How one Run travels through the code (the [shot flow](src/docs/04-rounds-grid.html) is in chapter 4):
+How one Run travels through the code (the [shot flow](https://totoratsu.github.io/steane-patterns/src/docs/04-rounds-grid.html) is in chapter 4):
 
-![Code path of one Run](src/img/code-path.svg)
+![Code path of one Run](https://raw.githubusercontent.com/Totoratsu/steane-patterns/main/src/img/code-path.svg)
 
 - **Qubits.** Two Steane blocks need 14 data qubits. One ancilla is measured and reset after every check, so the circuit fits in 15 qubits for any number of rounds.
 - **Circuit** (`engine/circuit.py`). Logical gates, encoding, rounds of checks, final readout. Every shot is its own circuit, sent in one job.
@@ -26,7 +24,7 @@ How one Run travels through the code (the [shot flow](src/docs/04-rounds-grid.ht
 - **Ground truth.** A Pauli frame (a record of the injected errors) is tracked through every gate, so each shot is judged exactly, not by a decoder.
 - **Decoders** (`engine/decoders.py`). BP and Relay-BP work on a space-time check matrix, in plain numpy. The **limit** is the exact error rate of the best decoder that reads one error type at a time.
 
-For the reasoning behind each part, read the docs: [syndromes](src/docs/03-syndromes.html), [noise models](src/docs/06-noise-models.html), [decoders](src/docs/08-belief-propagation.html), [limits](src/docs/12-limits.html).
+For the reasoning behind each part, read the docs: [syndromes](https://totoratsu.github.io/steane-patterns/src/docs/03-syndromes.html), [noise models](https://totoratsu.github.io/steane-patterns/src/docs/06-noise-models.html), [decoders](https://totoratsu.github.io/steane-patterns/src/docs/08-belief-propagation.html), [limits](https://totoratsu.github.io/steane-patterns/src/docs/12-limits.html).
 
 ## Limitations
 
