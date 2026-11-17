@@ -70,7 +70,7 @@ export function start(api) {
     let logical;
     try { logical = JSON.parse($('logical').value); } catch { return status('Gates must be valid JSON, e.g. [["h",0],["cx",0,1]]', true); }
     $('run').disabled = true;
-    status('Simulating 15 qubits shot by shot…');
+    status('Running… (on IonQ the job waits in a queue, which can take a while)');
     clearTimeout(st.timer);
     const t = performance.now();
     try {
@@ -81,7 +81,10 @@ export function start(api) {
       });
       if (res.error) return status(res.error, true);
       st.data = res; st.shot = 0; st.row = 0;
-      status(`${res.shots.length} shots, ${res.rounds} rounds, 15 qubits, ${((performance.now() - t) / 1000).toFixed(1)} s`);
+      const secs = `${((performance.now() - t) / 1000).toFixed(1)} s`;
+      status(res.mode === 'fresh'
+        ? `${res.backend}: ${res.shots.length} shots, 1 round on ${res.qubits} qubits (IonQ mode: a fresh ancilla per check, all measured at the end, IonQ's noise model instead of injected noise, judged against the ideal outcomes), ${secs}`
+        : `${res.shots.length} shots, ${res.rounds} rounds, ${res.qubits} qubits, ${secs}`);
       stats();
       tick();
     } catch (e) {
@@ -149,7 +152,8 @@ export function start(api) {
   function verdict(shot, k) {
     const key = $('decoder').value;
     const ks = k === undefined ? [0, 1] : [k];
-    if (key === 'none') return { ok: ks.every((i) => !shot.true_flip[i]), logical: ks.map((i) => shot.raw[i]) };
+    // IonQ mode: no Pauli frame, so the verdict is "outcome allowed by the ideal" (per shot, not per block).
+    if (key === 'none') return { ok: shot.true_flip ? ks.every((i) => !shot.true_flip[i]) : shot.raw_ok, logical: ks.map((i) => shot.raw[i]) };
     return { ok: ks.every((i) => shot[key].ok[i]), logical: ks.map((i) => shot[key].logical[i]) };
   }
 
@@ -186,7 +190,7 @@ export function start(api) {
     g.textAlign = 'right';
     for (let r = 0; r < rows; r++) g.fillText(`r${r + 1}`, padL - 8, ry(r) + u / 2);
     g.textAlign = 'left';
-    g.fillText('ancilla q14 readouts above · data qubits below', padL, padT + rows * u + 12);
+    g.fillText(d?.mode === 'fresh' ? 'ancillas q14–q25 (one per check) above · data qubits below' : 'ancilla q14 readouts above · data qubits below', padL, padT + rows * u + 12);
 
     const box = (x, y, fill, alpha = 1) => {
       g.globalAlpha = 1; g.fillStyle = col.off; g.beginPath(); g.roundRect(x + 2, y + 2, u - 4, u - 4, 4); g.fill();
@@ -289,6 +293,12 @@ export function start(api) {
     const d = st.data;
     if (!d) return;
     const e = d.logical_error, n = d.shots.length;
+    const judgeNote = d.mode === 'fresh'
+      ? `IonQ mode: the true error of a shot is unknown under hardware noise, so a logical error is a decoded outcome the ideal circuit never gives (outside ${Object.keys(d.ideal).join(' / ')}). Errors that land on an allowed outcome are not counted. `
+      : '';
+    if (e.raw === null) {
+      $('bars').innerHTML = `<p class="note">${judgeNote}This circuit can ideally give every outcome, so no logical error can be counted: compare the histograms below with the ideal instead. Try the Bell pair or |0⟩|0⟩.</p>`;
+    }
     const ci = (v) => 1.96 * Math.sqrt((v * (1 - v)) / n);
     const nc = (k) => d.shots.filter((s) => !s[k].converged.every(Boolean)).length / n;
     const bars = [['raw', 'No decoding', e.raw], ['bp', 'BP (min-sum)', e.bp, nc('bp')],
@@ -297,12 +307,12 @@ export function start(api) {
     const w = (v) => Math.min(100, (v / top) * 100);
     const note = (k, v, notConv) => [k === 'limit' ? 'exact' : `± ${pct(ci(v))}`, notConv === undefined ? '' : `${pct(notConv)} of shots did not converge`].filter(Boolean).join(' · ');
     const whisker = (v) => `<div class="ci"><i style="left:${w(Math.max(0, v - ci(v)))}%;width:${w(Math.min(top, v + ci(v))) - w(Math.max(0, v - ci(v)))}%"></i></div>`;
-    $('bars').innerHTML = bars.map(([k, label, v, notConv]) =>
+    if (e.raw !== null) $('bars').innerHTML = bars.map(([k, label, v, notConv]) =>
       `<div class="bar ${k}"><div class="bar-head"><span>${label}</span><b>${pct(v)}</b></div>` +
       `<div class="track" role="img" aria-label="${label}: ${pct(v)}"><div class="fill" style="width:${w(v)}%"></div>` +
       (k === 'limit' || e.limit === null ? '' : `<div class="lim" style="left:${w(e.limit)}%" title="optimal-decoder limit"></div>`) +
       `</div>${k === 'limit' ? '' : whisker(v)}<p class="bar-note">${note(k, v, notConv)}</p></div>`).join('') +
-      `<p class="note">${e.limit === null
+      `<p class="note">${judgeNote}${d.mode === 'fresh' ? 'No optimal-decoder limit: the real noise is unknown. ' : e.limit === null
         ? 'No optimal-decoder limit for SI1000: its noise is circuit-level, and the exact limit would need a circuit-level error model, not the rough one the decoders use.'
         : 'Black tick = limit: the exact error rate of the best decoder that reads one error type at a time, for this code and noise. With few shots a decoder can land below it by chance; over many shots, only a joint decoder can beat it.'} ± is the 95% interval for ${n} shots.</p>`;
     const outs = [...new Set([...Object.keys(d.ideal), ...Object.keys(d.hist.raw), ...Object.keys(d.hist.bp), ...Object.keys(d.hist.relay)])].sort();

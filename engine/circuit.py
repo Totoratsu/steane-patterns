@@ -1,7 +1,11 @@
 """One noisy trajectory: two Steane blocks (qubits 0-6 and 7-13) and one ancilla (14),
 reused with reset for all 12 checks of a round. Noise is sampled here and inserted as
 explicit Paulis, and a Pauli frame is tracked alongside, so we know the true logical
-error of every shot without trusting any decoder."""
+error of every shot without trusting any decoder.
+
+With fresh=True (the IonQ mode) every check gets its own ancilla, 14 + its clbit, and
+nothing is measured until the end: no mid-circuit measurement or reset. One round then
+needs 14 + 12 = 26 qubits."""
 
 import random
 
@@ -12,16 +16,16 @@ from .noise import sample
 
 BLOCKS = (0, 7)
 ANC = 14
-NQ = 15
+NQ = 15  # reused-ancilla mode; the fresh mode needs 14 + rounds * CHECKS
 CHECKS = len(BLOCKS) * 6  # per round: block A Z1-3, X1-3, then block B
 LOGICAL_GATES = {"h", "x", "y", "z", "s", "sdg", "t", "tdg", "sx", "rx", "ry", "rz", "cx", "cz", "swap"}
 
 
 class _Builder:
-    def __init__(self, chan: dict, rng: random.Random):
-        self.chan, self.rng = chan, rng
-        self.x = [0] * NQ  # Pauli frame: X part / Z part per qubit
-        self.z = [0] * NQ
+    def __init__(self, chan: dict, rng: random.Random, nq: int, fresh: bool):
+        self.chan, self.rng, self.fresh = chan, rng, fresh
+        self.x = [0] * nq  # Pauli frame: X part / Z part per qubit
+        self.z = [0] * nq
 
     def pauli(self, q: int, P) -> None:
         if P:
@@ -50,28 +54,32 @@ class _Builder:
         self.noise("cx", c, t)
 
     def check(self, off: int, row, is_x: bool, clbit: int) -> None:
+        anc = ANC + clbit if self.fresh else ANC
         if is_x:
-            self.h(ANC)
+            self.h(anc)
         for q in (off + j for j in range(7) if row[j]):
-            self.cx(ANC, q) if is_x else self.cx(q, ANC)
+            self.cx(anc, q) if is_x else self.cx(q, anc)
         if is_x:
-            self.h(ANC)
-        self.noise("meas", ANC)
-        self.qc.measure(ANC, clbit)
-        self.qc.reset(ANC)
-        self.x[ANC] = self.z[ANC] = 0
-        self.noise("reset", ANC)
+            self.h(anc)
+        self.noise("meas", anc)
+        if self.fresh:  # measured with the data at the end; the ancilla is never touched again
+            return
+        self.qc.measure(anc, clbit)
+        self.qc.reset(anc)
+        self.x[anc] = self.z[anc] = 0
+        self.noise("reset", anc)
 
     def data_noise(self) -> None:
         for q in range(14):
             self.noise("data", q)
 
 
-def build(logical: list, chan: dict, rounds: int, basis: str, rng: random.Random):
+def build(logical: list, chan: dict, rounds: int, basis: str, rng: random.Random, fresh: bool = False):
     """Returns (circuit, true logical flip per block). Classical bits: round r check c at
-    r*12+c, then the 14 data qubits."""
-    b = _Builder(chan, rng)
-    b.qc = qc = QuantumCircuit(NQ, rounds * CHECKS + 14)
+    r*12+c, then the 14 data qubits. The layout is the same in both modes."""
+    nq = 14 + rounds * CHECKS if fresh else NQ
+    b = _Builder(chan, rng, nq, fresh)
+    b.qc = qc = QuantumCircuit(nq, rounds * CHECKS + 14)
     inputs = [off + steane.INPUT for off in BLOCKS]
     for name, *args in logical:
         if name not in LOGICAL_GATES:
@@ -93,6 +101,8 @@ def build(logical: list, chan: dict, rounds: int, basis: str, rng: random.Random
         for q in range(14):
             qc.h(q)
             b.x[q], b.z[q] = b.z[q], b.x[q]
+    if fresh:
+        qc.measure(range(14, nq), range(rounds * CHECKS))
     qc.measure(range(14), range(rounds * CHECKS, rounds * CHECKS + 14))
     # Z^7 is a logical Z, so an X frame of odd weight on a block flips its readout.
     flips = [sum(b.x[off:off + 7]) % 2 for off in BLOCKS]
