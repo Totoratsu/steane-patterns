@@ -41,7 +41,7 @@ Qollab's IonQ route has no mid-circuit measurement or reset, takes one circuit p
 | Job | one circuit per shot | one circuit, many shots |
 | Ground truth | Pauli frame, exact per shot | ideal outcomes: a logical error is a decoded outcome the ideal never gives (outside 00 / 11 for the Bell pair) |
 
-Judging against the ideal misses errors that land on an allowed outcome, so it is a lower bound, and it counts nothing when the ideal allows all four outcomes (the page then shows only the histograms). There is no optimal-decoder limit in this mode. `main.js` waits for the first in-page Run before it finishes, as in the *Waiting for user input* section of Qollab's JS / Qiskit docs.
+Judging against the ideal misses errors that land on an allowed outcome, so it is a lower bound, and it counts nothing when the ideal allows all four outcomes (the page then shows only the histograms). There is no optimal-decoder limit in this mode. `main.js` waits for the first in-page Run before it finishes, as in the *Waiting for user input* section of Qollab's JS / Qiskit docs. So each Qollab Run sends one IonQ job: after it the page's Run button is disabled. Press Qollab's Run again for another job, or use the built-in simulator for multiple runs.
 
 ## Limitations
 
