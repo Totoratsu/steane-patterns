@@ -1,6 +1,9 @@
-"""python -m engine.selfcheck. Asserts the encoder, the decoders and the end-to-end run."""
+"""python -m engine.selfcheck. Asserts the encoder, the decoders and the end-to-end run.
+The IonQ-mode run needs qiskit-aer (requirements-dev.txt) and is skipped without it."""
 
 import json
+import random
+from types import SimpleNamespace
 
 import numpy as np
 from qiskit import QuantumCircuit
@@ -8,7 +11,36 @@ from qiskit.providers.basic_provider import BasicSimulator
 from qiskit.quantum_info import Pauli, Statevector
 
 from . import bridge, decoders, steane
+from .circuit import build
 from .noise import CHANNELS
+
+
+class FakeIonQ:
+    """Stands in for Qollab's IonQ noise-model simulator: an 'ionq' name, 29 qubits, a noise_model
+    option, mid-circuit measurement never used. Runs on Aer (MPS, so 26 qubits are cheap) with a
+    rough trapped-ion-like noise model; p2=0 is noiseless. Also used by scripts/serve.py --ionq."""
+
+    def __init__(self, noise_model="forte-1", p2=0.005, readout=0.003, num_qubits=29):
+        from qiskit_aer import AerSimulator
+        from qiskit_aer.noise import NoiseModel, ReadoutError, depolarizing_error
+        nm = NoiseModel()
+        if p2:
+            nm.add_all_qubit_quantum_error(depolarizing_error(p2, 2), ["cx", "cz", "swap"])
+            nm.add_all_qubit_quantum_error(depolarizing_error(p2 / 10, 1), ["h", "x", "y", "z", "s", "sdg", "t", "tdg", "sx", "rx", "ry", "rz"])
+        if readout:
+            nm.add_all_qubit_readout_error(ReadoutError([[1 - readout, readout], [readout, 1 - readout]]))
+        self._sim = AerSimulator(method="matrix_product_state", noise_model=nm)
+        self.name, self.num_qubits = "ionq_simulator", num_qubits
+        self.options = SimpleNamespace(noise_model=noise_model)
+        self.runs = []
+
+    def __getattr__(self, attr):  # target, instruction_durations, ... for transpile
+        return getattr(self._sim, attr)
+
+    def run(self, circuit, **kw):
+        assert not isinstance(circuit, (list, tuple)), "IonQ takes one circuit per job"
+        self.runs.append(kw)
+        return self._sim.run(circuit, **kw)
 
 
 def check_encoder():
@@ -57,7 +89,10 @@ def check_run():
     hi = json.loads(bridge.run(sim, channel="si1000", p=0.02, shots=32))["logical_error"]["relay"]
     assert lo < hi, (lo, hi)
 
-    assert "error" in json.loads(bridge.run("ionq_simulator"))
+    assert "error" in json.loads(bridge.run(SimpleNamespace(name="ionq_qpu.aria-1", num_qubits=25)))
+    assert "error" in json.loads(bridge.run(SimpleNamespace(name="ionq_simulator", num_qubits=29,
+                                                            options=SimpleNamespace(noise_model="aria-1"))))
+    assert "error" in json.loads(bridge.run("some_backend_without_reset"))
     assert "error" in json.loads(bridge.run(sim, p=0.9))
 
     # X readout uses the X checks (col0 = 3): Relay-BP must still beat no decoding
@@ -103,7 +138,41 @@ def check_relay_beats_bp(shots=4000, rounds=3, p=0.06):
     assert lim - 3 * sigma <= relay <= 1.2 * lim and fails["relay"] < fails["bp"], (fails, lim)
 
 
+def check_fresh_circuit():
+    """IonQ mode: 26 qubits, no reset, and every measurement after the last gate."""
+    qc, flips = build([["h", 0], ["cx", 0, 1]], {}, 1, "Z", random.Random(0), fresh=True)
+    assert qc.num_qubits == 26 and qc.num_clbits == 26 and flips == [0, 0]
+    names = [ins.operation.name for ins in qc.data]
+    assert "reset" not in names and names.index("measure") == len(names) - names.count("measure"), names
+
+
+def check_ionq_mode():
+    try:
+        import qiskit_aer  # noqa: F401
+    except ImportError:
+        print("  skipped: pip install qiskit-aer")
+        return
+    clean = FakeIonQ(p2=0, readout=0)
+    r = json.loads(bridge.run(clean, shots=64))
+    assert (r["mode"], r["rounds"], r["qubits"], r["logical_error"]["limit"]) == ("fresh", 1, 26, None), r.get("error")
+    assert clean.runs == [{"shots": 64}], clean.runs  # one circuit, many shots, no simulator-only options
+    assert all(not any(s["grid"][0]) for s in r["shots"]), "noiseless: no check may fire"
+    assert set(r["hist"]["raw"]) == {"00", "11"} and r["logical_error"] == {"raw": 0, "bp": 0, "relay": 0, "limit": None}
+    r = json.loads(bridge.run(clean, shots=32, basis="X", rounds=4, p=0.05))  # rounds and p are not injected here
+    assert r["rounds"] == 1 and r["logical_error"]["relay"] == 0, r["logical_error"]
+
+    r = json.loads(bridge.run(FakeIonQ(p2=0.01), shots=256))
+    e = r["logical_error"]
+    print("  IonQ mode, noisy stand-in:", {k: round(v, 3) for k, v in e.items() if v is not None})
+    assert e["relay"] <= e["bp"] and e["relay"] < e["raw"], e
+    # every outcome possible in the ideal: nothing can be counted
+    r = json.loads(bridge.run(clean, logical='[["h",0],["h",1]]', shots=16))
+    assert r["logical_error"]["raw"] is None, r["logical_error"]
+    assert "error" in json.loads(bridge.run(FakeIonQ(noise_model="aria-1"), shots=16))
+
+
 if __name__ == "__main__":
-    for f in (check_encoder, check_limit, check_decoders, check_run, check_relay_beats_bp):
+    for f in (check_encoder, check_limit, check_decoders, check_run, check_fresh_circuit, check_ionq_mode,
+              check_relay_beats_bp):
         f()
         print("ok", f.__name__)

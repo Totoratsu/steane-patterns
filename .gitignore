@@ -36,3 +36,6 @@ npm-debug.log
 *.log
 /scratchpad/
 .devcontainer/
+
+# Upload bundles for Qollab
+*.zip

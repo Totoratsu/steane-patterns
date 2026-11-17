@@ -4,22 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Steane Patterns</title>
-<link rel="icon" type="image/png" sizes="32x32" href="src/img/steane-icon-32.png">
-<link rel="apple-touch-icon" href="src/img/steane-icon-192.png">
-<link rel="preload" href="src/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="src/fonts/InstrumentSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="src/css/tokens.css">
-<link rel="stylesheet" href="src/css/main.css">
+<link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/Totoratsu/steane-patterns/main/src/img/steane-icon-32.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Totoratsu/steane-patterns/main/src/img/steane-icon-192.png">
+<link rel="preload" href="https://raw.githubusercontent.com/Totoratsu/steane-patterns/main/src/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://raw.githubusercontent.com/Totoratsu/steane-patterns/main/src/fonts/InstrumentSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="main.css">
 </head>
 <body>
 <header>
   <p class="eyebrow">Quantum error correction · Steane [[7,1,3]]</p>
-  <h1><img class="mark" src="src/img/steane-icon-192.png" alt="" width="56" height="56">Steane Patterns</h1>
+  <h1><img class="mark" src="https://raw.githubusercontent.com/Totoratsu/steane-patterns/main/src/img/steane-icon-192.png" alt="" width="56" height="56">Steane Patterns</h1>
   <p>Two logical qubits, each protected by a Steane [[7,1,3]] code, go through repeated rounds of error correction. Noise lights up the parity checks, every lit check plays a note, and two decoders (plain BP and Relay-BP) try to undo the damage.</p>
 </header>
 
 <section class="guide" aria-label="How to read this">
-<details id="guideBox" open>
+<details id="guideBox">
 <summary>How to read this</summary>
 <div class="cols">
 <div>
@@ -91,7 +90,7 @@
       <label class="inline">Tempo <input id="tempo" aria-label="Tempo" type="range" min="80" max="700" value="420"></label>
       <label class="inline"><input id="sound" type="checkbox" checked> Sound</label>
     </div>
-    <p class="legend"><span><span class="sw z"></span>Z check (sees X errors)</span> <span><span class="sw x"></span>X check (sees Z errors)</span> <span><span class="sw d"></span>data qubit read 1</span> <span><span class="sw m"></span>decoder blames this</span> <a href="src/docs/03-syndromes.html">What are Z and X checks?</a></p>
+    <p class="legend"><span><span class="sw z"></span>Z check (sees X errors)</span> <span><span class="sw x"></span>X check (sees Z errors)</span> <span><span class="sw d"></span>data qubit read 1</span> <span><span class="sw m"></span>decoder blames this</span> <a href="https://totoratsu.github.io/steane-patterns/src/docs/03-syndromes.html">What are Z and X checks?</a></p>
     <details class="soundmap">
       <summary>Sound map: which check plays which note</summary>
       <div id="soundmap"></div>
@@ -115,13 +114,13 @@
       <h2 id="docs-h">How do these simulations work?</h2>
       <p>Twelve short chapters, from a single bit flip to Relay-BP, with figures you can touch and setups you can run.</p>
     </div>
-    <a class="btn lg" href="src/docs/">Read the documentation <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
+    <a class="btn lg" href="https://totoratsu.github.io/steane-patterns/src/docs/">Read the documentation <svg class="arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
     <ul class="docs-topics">
       <li class="eyebrow">Start anywhere</li>
-      <li><a href="src/docs/03-syndromes.html"><span class="n">03</span>What is a syndrome?</a></li>
-      <li><a href="src/docs/05-detection-events.html"><span class="n">05</span>Why a check that changes is a detection</a></li>
-      <li><a href="src/docs/08-belief-propagation.html"><span class="n">08</span>Why plain BP gets lost on this code</a></li>
-      <li><a href="src/docs/11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
+      <li><a href="https://totoratsu.github.io/steane-patterns/src/docs/03-syndromes.html"><span class="n">03</span>What is a syndrome?</a></li>
+      <li><a href="https://totoratsu.github.io/steane-patterns/src/docs/05-detection-events.html"><span class="n">05</span>Why a check that changes is a detection</a></li>
+      <li><a href="https://totoratsu.github.io/steane-patterns/src/docs/08-belief-propagation.html"><span class="n">08</span>Why plain BP gets lost on this code</a></li>
+      <li><a href="https://totoratsu.github.io/steane-patterns/src/docs/11-listening.html"><span class="n">11</span>Listening to a shot</a></li>
     </ul>
   </section>
 </div>
