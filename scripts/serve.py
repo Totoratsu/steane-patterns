@@ -56,4 +56,4 @@ if __name__ == "__main__":
     nums = [a for a in sys.argv[1:] if not a.startswith("--")]
     port = int(nums[0]) if nums else 8000
     print(f"Steane Patterns on http://localhost:{port} ({BACKEND.name})")
-    http.server.ThreadingHTTPServer(("", port), partial(Handler, directory=str(ROOT))).serve_forever()
+    http.server.ThreadingHTTPServer(("127.0.0.1", port), partial(Handler, directory=str(ROOT))).serve_forever()

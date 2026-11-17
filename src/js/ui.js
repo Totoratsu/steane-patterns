@@ -59,17 +59,12 @@ export function start(api) {
   $('play').innerHTML = PAUSE;
   document.fonts?.ready.then(() => draw());
 
-  // "How to read this" is open on the first visit and closed afterwards.
-  try {
-    if (localStorage.getItem('sp-guide-seen')) $('guideBox').open = false;
-    else localStorage.setItem('sp-guide-seen', '1');
-  } catch { /* storage can be blocked; keep the default */ }
-
   $('run').onclick = async () => {
     synth.wake();
     let logical;
     try { logical = JSON.parse($('logical').value); } catch { return status('Gates must be valid JSON, e.g. [["h",0],["cx",0,1]]', true); }
     $('run').disabled = true;
+    $('run').setAttribute('aria-busy', 'true');
     status('Running… (on IonQ the job waits in a queue, which can take a while)');
     clearTimeout(st.timer);
     const t = performance.now();
@@ -83,14 +78,17 @@ export function start(api) {
       st.data = res; st.shot = 0; st.row = 0;
       const secs = `${((performance.now() - t) / 1000).toFixed(1)} s`;
       status(res.mode === 'fresh'
-        ? `${res.backend}: ${res.shots.length} shots, 1 round on ${res.qubits} qubits (IonQ mode: a fresh ancilla per check, all measured at the end, IonQ's noise model instead of injected noise, judged against the ideal outcomes), ${secs}`
+        ? `${res.backend}: ${res.shots.length} shots, 1 round on ${res.qubits} qubits (IonQ mode: a fresh ancilla per check, all measured at the end, IonQ's noise model instead of injected noise, judged against the ideal outcomes), ${secs}. Press Qollab's Run to send another IonQ job.`
         : `${res.shots.length} shots, ${res.rounds} rounds, ${res.qubits} qubits, ${secs}`);
       stats();
       tick();
     } catch (e) {
       status(String(e.message || e), true);
     } finally {
-      $('run').disabled = false;
+      // Qollab runs one IonQ job per Run: once main.js has finished, a second job here would fail.
+      $('run').disabled = st.data?.mode === 'fresh';
+      $('run').removeAttribute('aria-busy');
+      if ($('run').disabled) $('run').textContent = "Use built-in simulator for multiple runs";
     }
   };
 

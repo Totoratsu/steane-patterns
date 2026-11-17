@@ -28,7 +28,7 @@ def encoder():
 def check(kind, noisy=False):
     """One check, built by the same _Builder code the simulator runs."""
     chan = CHANNELS["si1000"](0.3) if noisy else {}
-    b = _Builder(chan, random.Random(3))
+    b = _Builder(chan, random.Random(3), NQ, False)
     b.qc = QuantumCircuit(NQ, 6)
     b.check(0, steane.H[0], kind == "X", 0)
     return b.qc

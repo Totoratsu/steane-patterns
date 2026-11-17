@@ -68,6 +68,7 @@ The circuit figures in `src/img/` are drawn from the code: `python scripts/make_
 
 ```
 index.html, main.js     Qollab entry points (stay at the root; main.js imports engine.bridge and passes `backend`)
+main.css                generated from src/css by scripts/build_css.py (Qollab only loads a root main.css)
 requirements.txt        qiskit, numpy
 engine/                 Python: steane, noise, circuit, decoders, bridge, selfcheck
 src/js/                 ui.js, audio.js (app), steane-patterns.js (docs)
@@ -75,7 +76,7 @@ src/css/                tokens.css, main.css (app), docs.css (docs)
 src/fonts/              Geist, Instrument Serif (+ licences)
 src/docs/               the documentation (index.html, chapters, appendices)
 src/img/                diagrams (SVG) used by the docs and README
-scripts/                serve.py (local mode), benchmark.py (chapter 9 table), make_diagrams.py (figures)
+scripts/                serve.py (local mode), benchmark.py (chapter 9 table), make_diagrams.py (figures), build_css.py (main.css)
 ```
 
 ## Credits

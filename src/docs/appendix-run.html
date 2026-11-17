@@ -76,6 +76,7 @@ python -m engine.selfcheck</code></pre>
 
     <h2 id="layout">Project layout</h2>
     <pre><code>index.html, main.js   Qollab entry points (must stay at the root)
+main.css              generated from src/css by scripts/build_css.py
 requirements.txt      qiskit, numpy
 engine/               Python: steane, noise, circuit, decoders, bridge
 src/js/               ui.js, audio.js (app); steane-patterns.js (docs)
@@ -83,7 +84,7 @@ src/css/              tokens.css, main.css (app); docs.css (docs)
 src/img/              diagrams (SVG)
 src/fonts/            Geist, Instrument Serif and their licences
 src/docs/             this documentation (static HTML)
-scripts/              serve.py (local mode), benchmark.py, make_diagrams.py</code></pre>
+scripts/              serve.py (local mode), benchmark.py, make_diagrams.py, build_css.py</code></pre>
 
     <h2 id="licence">Licence</h2>
     <p>Steane Patterns is released under the MIT licence, copyright 2026 Nixon Lizcano. The full text is in <code>LICENSE</code> at the repository root.</p>
